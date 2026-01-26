@@ -1,0 +1,27 @@
+{
+  "name": "daily-gamer",
+  "version": "1.0.0",
+  "description": "A central hub for daily game results",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vedvart/daily-gamer.git"
+  },
+  "keywords": ["daily-games", "wordle", "connections"],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Vedvart/daily-gamer/issues"
+  },
+  "homepage": "https://github.com/Vedvart/daily-gamer#readme",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

@@ -1,0 +1,146 @@
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  background-color: var(--bg-secondary);
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--bg-card);
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.logo-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3px;
+  width: 32px;
+  height: 32px;
+}
+
+.logo-tile {
+  border-radius: 3px;
+}
+
+.logo-tile.green { background-color: var(--accent-green); }
+.logo-tile.yellow { background-color: var(--accent-yellow); }
+.logo-tile.blue { background-color: var(--accent-blue); }
+.logo-tile.purple { background-color: var(--accent-purple); }
+
+.logo h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.main {
+  flex: 1;
+  padding: 3rem 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.hero h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tagline {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+}
+
+.games-preview {
+  margin-bottom: 3rem;
+}
+
+.games-preview h3 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.game-card {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  background-color: #2d2d4a;
+}
+
+.game-emoji {
+  font-size: 1.5rem;
+  font-weight: 700;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue));
+  border-radius: 8px;
+}
+
+.game-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status {
+  text-align: center;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.status-indicator {
+  font-weight: 600;
+}
+
+.status-indicator.online {
+  color: var(--accent-green);
+}
+
+.status-indicator.offline {
+  color: #ef4444;
+}
+
+.footer {
+  background-color: var(--bg-secondary);
+  padding: 1.5rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  border-top: 1px solid var(--bg-card);
+}
