@@ -92,35 +92,64 @@ Parser should be modular—each game is a plugin with its own regex/parsing logi
 
 \## GitHub
 
-
-
 \- Repository: https://github.com/Vedvart/daily-gamer
-
 \- Push directly to `main` branch for now
+\- Auto-deploys to Railway on push
 
+\## Deployment
 
+\- **Hosting:** Railway (connected to GitHub, auto-deploys on push to main)
+\- **URL:** Check Railway dashboard for the live URL (*.up.railway.app)
+\- Railway project is connected to the Vedvart/daily-gamer repo
+
+\## Project Structure
+
+```
+daily-gamer/
+├── client/                 # React frontend (Vite)
+│   ├── src/
+│   │   ├── App.jsx         # Main component
+│   │   ├── App.css         # Component styles
+│   │   ├── main.jsx        # React entry point
+│   │   └── index.css       # Global styles (CSS variables for dark theme)
+│   ├── public/favicon.svg
+│   ├── index.html
+│   └── vite.config.js      # Vite config with API proxy
+├── server/                 # Express backend
+│   └── index.js            # API server, serves React build in production
+├── package.json            # Root scripts, Railway uses this
+└── CLAUDE.md
+```
+
+\## Development Commands
+
+```bash
+npm run dev          # Run both client and server locally
+npm run dev:client   # Run only frontend (localhost:5173)
+npm run dev:server   # Run only backend (localhost:3001)
+npm run build        # Build client for production
+```
 
 \## Current Status
 
+**Phase 1 MVP - In Progress**
 
+Completed:
+- [x] Project structure (React frontend, Express backend)
+- [x] Hello World landing page with dark mode styling
+- [x] Railway deployment pipeline working
+- [x] API health check endpoint (/api/health)
 
-Project is brand new. No code has been written yet. Starting with Phase 1 MVP.
-
-
+In Progress:
+- [ ] Add PostgreSQL database to Railway
+- [ ] Build authentication system
+- [ ] Build result parsing engine
+- [ ] Build user profiles and stats display
 
 \## Next Steps
 
-
-
-1\. Set up project structure (React frontend, Express backend)
-
-2\. Implement basic Hello World to verify deployment pipeline
-
-3\. Set up Railway hosting with PostgreSQL
-
-4\. Build authentication system
-
-5\. Build result parsing engine
-
-6\. Build user profiles and stats display
+1\. Add PostgreSQL database to Railway project
+2\. Build authentication system (email/password first, then OAuth)
+3\. Build result parsing engine (modular plugin system for each game)
+4\. Build user profiles and stats display
 
