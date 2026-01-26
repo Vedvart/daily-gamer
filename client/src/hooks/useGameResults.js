@@ -148,22 +148,26 @@ function useGameResults() {
     return histogram;
   }, [results]);
 
-  // Get histogram data for Connections (mistakes: 0-3, X for failed)
+  // Get histogram data for Connections (includes Reverse Perfect and Purple First)
   const getConnectionsHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'connections');
-    const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, X: 0 };
+    const histogram = { 'RP': 0, 'PF': 0, 0: 0, 1: 0, 2: 0, 3: 0, 'X': 0 };
 
     gameResults.forEach(r => {
-      if (r.won) {
+      if (!r.won) {
+        histogram['X']++;
+      } else if (r.isReversePerfect) {
+        histogram['RP']++;
+      } else if (r.isPurpleFirst) {
+        histogram['PF']++;
+      } else {
         // scoreValue is 4 - mistakes, so mistakes = 4 - scoreValue
         const mistakes = 4 - r.scoreValue;
         if (mistakes >= 0 && mistakes <= 3) {
           histogram[mistakes]++;
         } else {
-          histogram[0]++; // Perfect if we can't determine
+          histogram[0]++;
         }
-      } else {
-        histogram['X']++;
       }
     });
 
@@ -209,47 +213,41 @@ function useGameResults() {
     return histogram;
   }, [results]);
 
-  // Get histogram data for Catfishing (score ranges 1-10)
+  // Get histogram data for Catfishing (individual scores 0-10)
   const getCatfishingHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'catfishing');
-    const histogram = { '1-2': 0, '3-4': 0, '5-6': 0, '7-8': 0, '9-10': 0 };
+    const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 };
 
     gameResults.forEach(r => {
       const score = r.scoreValue;
-      if (score <= 2) {
-        histogram['1-2']++;
-      } else if (score <= 4) {
-        histogram['3-4']++;
-      } else if (score <= 6) {
-        histogram['5-6']++;
-      } else if (score <= 8) {
-        histogram['7-8']++;
-      } else {
-        histogram['9-10']++;
+      if (score >= 0 && score <= 10) {
+        histogram[score]++;
       }
     });
 
     return histogram;
   }, [results]);
 
-  // Get histogram data for TimeGuessr (percentage ranges)
+  // Get histogram data for TimeGuessr (5k point buckets)
   const getTimeguessrHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'timeguessr');
-    const histogram = { '0-20%': 0, '20-40%': 0, '40-60%': 0, '60-80%': 0, '80-100%': 0 };
+    const histogram = {
+      '0-5k': 0, '5-10k': 0, '10-15k': 0, '15-20k': 0, '20-25k': 0,
+      '25-30k': 0, '30-35k': 0, '35-40k': 0, '40-45k': 0, '45-50k': 0
+    };
 
     gameResults.forEach(r => {
-      const percent = (r.scoreValue / 50000) * 100;
-      if (percent < 20) {
-        histogram['0-20%']++;
-      } else if (percent < 40) {
-        histogram['20-40%']++;
-      } else if (percent < 60) {
-        histogram['40-60%']++;
-      } else if (percent < 80) {
-        histogram['60-80%']++;
-      } else {
-        histogram['80-100%']++;
-      }
+      const score = r.scoreValue;
+      if (score < 5000) histogram['0-5k']++;
+      else if (score < 10000) histogram['5-10k']++;
+      else if (score < 15000) histogram['10-15k']++;
+      else if (score < 20000) histogram['15-20k']++;
+      else if (score < 25000) histogram['20-25k']++;
+      else if (score < 30000) histogram['25-30k']++;
+      else if (score < 35000) histogram['30-35k']++;
+      else if (score < 40000) histogram['35-40k']++;
+      else if (score < 45000) histogram['40-45k']++;
+      else histogram['45-50k']++;
     });
 
     return histogram;

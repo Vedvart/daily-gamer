@@ -1,5 +1,9 @@
 // Connections Parser
 // Format: "Connections Puzzle #123" followed by colored squares grid
+// Colors: 🟨 (yellow), 🟩 (green), 🟦 (blue), 🟪 (purple)
+// Special achievements:
+// - Reverse Perfect: Purple → Blue → Green → Yellow order, no mistakes
+// - Purple First: Purple first but not full reverse order, no mistakes
 
 const connectionsParser = {
   id: 'connections',
@@ -25,24 +29,54 @@ const connectionsParser = {
     // Calculate mistakes from grid - perfect is 4 lines of same color
     // Count how many "wrong" guesses (lines that aren't all same color)
     let mistakes = 0;
+    const rowColors = []; // Track the color of each successful row
+
     gridLines.forEach(line => {
       const squares = line.trim().match(/[🟨🟩🟦🟪]/g) || [];
       if (squares.length === 4) {
         const allSame = squares.every(s => s === squares[0]);
-        if (!allSame) mistakes++;
+        if (!allSame) {
+          mistakes++;
+        } else {
+          rowColors.push(squares[0]);
+        }
       }
     });
 
-    // Score is 4 - mistakes (4 is perfect, 0 means lost)
-    const won = gridLines.length === 4 && mistakes === 0;
+    // Check for special achievements (only if no mistakes and 4 successful rows)
+    let isReversePerfect = false;
+    let isPurpleFirst = false;
+
+    if (mistakes === 0 && rowColors.length === 4) {
+      // Reverse Perfect: Purple → Blue → Green → Yellow
+      const reverseOrder = ['🟪', '🟦', '🟩', '🟨'];
+      isReversePerfect = rowColors.every((color, i) => color === reverseOrder[i]);
+
+      // Purple First: Purple is first but not full reverse order
+      if (!isReversePerfect && rowColors[0] === '🟪') {
+        isPurpleFirst = true;
+      }
+    }
+
+    // Determine score display
+    const won = gridLines.length >= 4 && rowColors.length === 4;
     const scoreValue = 4 - mistakes;
 
-    // Calculate approximate date (Connections started around June 2023)
-    // Puzzle #1 was June 12, 2023
-    const baseDate = new Date('2023-06-12');
-    const puzzleDate = new Date(baseDate);
-    puzzleDate.setDate(baseDate.getDate() + puzzleNumber - 1);
-    const date = puzzleDate.toISOString().split('T')[0];
+    let score;
+    if (isReversePerfect) {
+      score = 'Reverse Perfect!';
+    } else if (isPurpleFirst) {
+      score = 'Purple First!';
+    } else if (won && mistakes === 0) {
+      score = 'Perfect!';
+    } else if (won) {
+      score = `${mistakes} mistake${mistakes !== 1 ? 's' : ''}`;
+    } else {
+      score = 'Failed';
+    }
+
+    // Use today's date for "today's results" filtering
+    const date = new Date().toISOString().split('T')[0];
 
     return {
       id: `connections-${puzzleNumber}-${Date.now()}`,
@@ -50,13 +84,16 @@ const connectionsParser = {
       gameName: 'Connections',
       puzzleNumber,
       date,
-      score: won ? 'Perfect!' : `${mistakes} mistake${mistakes !== 1 ? 's' : ''}`,
+      score,
       scoreValue,
       maxScore: 4,
       won,
       grid,
       rawText: text.trim(),
       timestamp: Date.now(),
+      // Extra metadata for histogram categorization
+      isReversePerfect,
+      isPurpleFirst,
     };
   },
 };

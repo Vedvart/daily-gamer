@@ -1,5 +1,6 @@
 // Catfishing Parser
-// Format: "catfishing.net #78 - 8/10" with cat/fish emojis
+// Format: "catfishing.net #78 - 8/10" with cat/fish/egg emojis
+// Cat (🐈) = success, Fish (🐟) = failure, Egg (🥚) = close enough (counts as success)
 
 const catfishingParser = {
   id: 'catfishing',
@@ -16,19 +17,17 @@ const catfishingParser = {
     const score = parseInt(headerMatch[2], 10);
     const won = score >= 5; // Consider 5+ as a "win"
 
-    // Extract emoji grid (lines with cat/fish emojis)
+    // Extract emoji grid (lines with cat/fish/egg emojis)
     const lines = text.split('\n');
     const gridLines = lines.filter(line => {
       const trimmed = line.trim();
-      return trimmed.length > 0 && /[🐈🐟🐱🐠🐡🟩🟥⬛⬜]/.test(trimmed) && !this.pattern.test(trimmed);
+      // Include egg emoji (🥚) in the pattern
+      return trimmed.length > 0 && /[🐈🐟🥚🐱🐠🐡🟩🟥⬛⬜]/.test(trimmed) && !this.pattern.test(trimmed);
     });
     const grid = gridLines.join('\n');
 
-    // Calculate approximate date
-    const baseDate = new Date('2023-01-01');
-    const puzzleDate = new Date(baseDate);
-    puzzleDate.setDate(baseDate.getDate() + puzzleNumber - 1);
-    const date = puzzleDate.toISOString().split('T')[0];
+    // Use today's date for "today's results" filtering
+    const date = new Date().toISOString().split('T')[0];
 
     return {
       id: `catfishing-${puzzleNumber}-${Date.now()}`,

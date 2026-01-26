@@ -21,14 +21,11 @@ const timeguessrParser = {
     const starMatch = text.match(/[⭐★☆]+/g);
     const stars = starMatch ? starMatch.join(' ') : null;
 
-    // Calculate approximate date
-    const baseDate = new Date('2023-06-01');
-    const puzzleDate = new Date(baseDate);
-    puzzleDate.setDate(baseDate.getDate() + puzzleNumber - 1);
-    const date = puzzleDate.toISOString().split('T')[0];
-
     // Format score with commas
     const formattedScore = score.toLocaleString();
+
+    // Use today's date for "today's results" filtering
+    const date = new Date().toISOString().split('T')[0];
 
     return {
       id: `timeguessr-${puzzleNumber}-${Date.now()}`,

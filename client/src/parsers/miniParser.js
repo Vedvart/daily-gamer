@@ -17,27 +17,23 @@ const miniParser = {
     const seconds = parseInt(match[3], 10);
     const totalSeconds = minutes * 60 + seconds;
 
-    // Parse the date string (e.g., "January 26, 2026")
-    let date;
+    // Generate puzzle number from the date string (approximate)
+    let puzzleNumber = 0;
     try {
       const parsedDate = new Date(dateStr);
       if (!isNaN(parsedDate.getTime())) {
-        date = parsedDate.toISOString().split('T')[0];
-      } else {
-        date = new Date().toISOString().split('T')[0];
+        const baseDate = new Date('2014-08-21');
+        puzzleNumber = Math.floor((parsedDate - baseDate) / (1000 * 60 * 60 * 24));
       }
     } catch {
-      date = new Date().toISOString().split('T')[0];
+      puzzleNumber = Date.now();
     }
 
-    // Generate puzzle number from date (approximate)
-    const baseDate = new Date('2014-08-21'); // Mini started around this date
-    const currentDate = new Date(date);
-    const daysDiff = Math.floor((currentDate - baseDate) / (1000 * 60 * 60 * 24));
-    const puzzleNumber = daysDiff;
+    // Use today's date for "today's results" filtering
+    const date = new Date().toISOString().split('T')[0];
 
     return {
-      id: `mini-${date}-${Date.now()}`,
+      id: `mini-${puzzleNumber}-${Date.now()}`,
       gameId: 'mini',
       gameName: 'NYT Mini',
       puzzleNumber,

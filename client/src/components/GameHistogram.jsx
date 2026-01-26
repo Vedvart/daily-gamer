@@ -12,7 +12,7 @@ function GameHistogram({ title, data, labels, colors, total, formatLabel }) {
   return (
     <div className="histogram-card">
       <h3 className="histogram-card__title">{title}</h3>
-      <div className="histogram">
+      <div className={`histogram ${labels.length > 8 ? 'histogram--compact' : ''}`}>
         {labels.map((label, index) => {
           const value = values[index];
           const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
@@ -56,11 +56,19 @@ export function WordleHistogram({ data }) {
   );
 }
 
-// Connections Histogram: 0-4 mistakes
+// Connections Histogram: Reverse Perfect, Purple First, 0-3 mistakes, X
 export function ConnectionsHistogram({ data }) {
-  const labels = ['0', '1', '2', '3', 'X'];
+  const labels = ['RP', 'PF', '0', '1', '2', '3', 'X'];
   const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
-  const colors = { 'X': 'failure', '0': 'perfect' };
+  const colors = { 'X': 'failure', 'RP': 'special', 'PF': 'special', '0': 'perfect' };
+
+  const formatLabel = (l) => {
+    if (l === 'RP') return 'Rev';
+    if (l === 'PF') return 'Purp';
+    if (l === 'X') return 'X';
+    if (l === '0') return '0';
+    return l;
+  };
 
   return (
     <GameHistogram
@@ -69,7 +77,7 @@ export function ConnectionsHistogram({ data }) {
       labels={labels}
       colors={colors}
       total={total}
-      formatLabel={(l) => l === 'X' ? 'X' : l === '0' ? 'Perfect' : `${l} err`}
+      formatLabel={formatLabel}
     />
   );
 }
@@ -108,11 +116,11 @@ export function BandleHistogram({ data }) {
   );
 }
 
-// Catfishing Histogram: Score ranges 1-10
+// Catfishing Histogram: Individual scores 0-10
 export function CatfishingHistogram({ data }) {
-  const labels = ['1-2', '3-4', '5-6', '7-8', '9-10'];
+  const labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
   const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
-  const colors = { '9-10': 'perfect', '1-2': 'failure' };
+  const colors = { '10': 'perfect', '9': 'perfect', '0': 'failure', '1': 'failure', '2': 'failure' };
 
   return (
     <GameHistogram
@@ -125,11 +133,17 @@ export function CatfishingHistogram({ data }) {
   );
 }
 
-// TimeGuessr Histogram: Score percentage ranges
+// TimeGuessr Histogram: 5k point buckets
 export function TimeguessrHistogram({ data }) {
-  const labels = ['0-20%', '20-40%', '40-60%', '60-80%', '80-100%'];
+  const labels = ['0-5k', '5-10k', '10-15k', '15-20k', '20-25k', '25-30k', '30-35k', '35-40k', '40-45k', '45-50k'];
   const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
-  const colors = { '80-100%': 'perfect', '0-20%': 'failure' };
+  const colors = { '45-50k': 'perfect', '40-45k': 'perfect', '0-5k': 'failure', '5-10k': 'failure' };
+
+  // Shorter labels for display
+  const formatLabel = (l) => {
+    const match = l.match(/(\d+)-/);
+    return match ? match[1] : l;
+  };
 
   return (
     <GameHistogram
@@ -138,6 +152,7 @@ export function TimeguessrHistogram({ data }) {
       labels={labels}
       colors={colors}
       total={total}
+      formatLabel={formatLabel}
     />
   );
 }

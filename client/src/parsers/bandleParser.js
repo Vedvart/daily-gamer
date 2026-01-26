@@ -28,11 +28,8 @@ const bandleParser = {
     });
     const grid = gridLines.join('\n');
 
-    // Calculate approximate date (Bandle started around 2022)
-    const baseDate = new Date('2022-09-01');
-    const puzzleDate = new Date(baseDate);
-    puzzleDate.setDate(baseDate.getDate() + puzzleNumber - 1);
-    const date = puzzleDate.toISOString().split('T')[0];
+    // Use today's date for "today's results" filtering
+    const date = new Date().toISOString().split('T')[0];
 
     return {
       id: `bandle-${puzzleNumber}-${Date.now()}`,

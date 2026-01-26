@@ -25,11 +25,8 @@ const wordleParser = {
     });
     const grid = gridLines.join('\n');
 
-    // Calculate date from puzzle number (Wordle #0 was June 19, 2021)
-    const baseDate = new Date('2021-06-19');
-    const puzzleDate = new Date(baseDate);
-    puzzleDate.setDate(baseDate.getDate() + puzzleNumber);
-    const date = puzzleDate.toISOString().split('T')[0];
+    // Use today's date for "today's results" filtering
+    const date = new Date().toISOString().split('T')[0];
 
     return {
       id: `wordle-${puzzleNumber}-${Date.now()}`,
