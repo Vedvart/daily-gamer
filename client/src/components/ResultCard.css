@@ -1,0 +1,112 @@
+.result-card {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 1.25rem;
+  border-left: 4px solid var(--accent-blue);
+}
+
+.result-card--wordle { border-left-color: var(--game-wordle); }
+.result-card--connections { border-left-color: var(--game-connections); }
+.result-card--mini { border-left-color: var(--game-mini); }
+.result-card--bandle { border-left-color: var(--game-bandle); }
+.result-card--catfishing { border-left-color: var(--game-catfishing); }
+.result-card--timeguessr { border-left-color: var(--game-timeguessr); }
+
+.result-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.result-card__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.result-card__icon--wordle { background-color: var(--game-wordle); }
+.result-card__icon--connections { background-color: var(--game-connections); }
+.result-card__icon--mini { background-color: var(--game-mini); }
+.result-card__icon--bandle { background-color: var(--game-bandle); }
+.result-card__icon--catfishing { background-color: var(--game-catfishing); }
+.result-card__icon--timeguessr { background-color: var(--game-timeguessr); }
+
+.result-card__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-card__game {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.result-card__puzzle {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.result-card__score {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.result-card__grid {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
+  line-height: 1.4;
+  font-size: 1.25rem;
+  letter-spacing: 2px;
+  margin-bottom: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.result-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--bg-secondary);
+}
+
+.result-card__status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.result-card__status.won {
+  color: var(--accent-green);
+}
+
+.result-card__status.lost {
+  color: var(--error);
+}
+
+.result-card__remove {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  transition: color 0.2s, background-color 0.2s;
+}
+
+.result-card__remove:hover {
+  color: var(--error);
+  background-color: rgba(239, 68, 68, 0.1);
+}

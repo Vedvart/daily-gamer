@@ -1,0 +1,121 @@
+.home-main {
+  flex: 1;
+  padding: 3rem 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.hero {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.hero h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.tagline {
+  font-size: 1.25rem;
+  color: var(--text-secondary);
+  margin-bottom: 2rem;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 0.875rem 2rem;
+  background: linear-gradient(135deg, var(--accent-green), var(--accent-blue));
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.cta-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(34, 197, 94, 0.3);
+}
+
+.games-preview {
+  margin-bottom: 3rem;
+}
+
+.games-preview h3 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.game-card {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.game-card:hover {
+  transform: translateY(-2px);
+  background-color: #2d2d4a;
+}
+
+.game-icon {
+  font-size: 1.5rem;
+  font-weight: 700;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  color: white;
+}
+
+.game-icon.wordle { background-color: var(--game-wordle); }
+.game-icon.connections { background-color: var(--game-connections); }
+.game-icon.mini { background-color: var(--game-mini); }
+.game-icon.bandle { background-color: var(--game-bandle); }
+.game-icon.catfishing { background-color: var(--game-catfishing); }
+.game-icon.timeguessr { background-color: var(--game-timeguessr); }
+
+.game-name {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.status {
+  text-align: center;
+  padding: 1rem;
+  background-color: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.status-indicator {
+  font-weight: 600;
+}
+
+.status-indicator.online {
+  color: var(--accent-green);
+}
+
+.status-indicator.offline {
+  color: var(--error);
+}

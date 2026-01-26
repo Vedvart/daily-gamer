@@ -102,16 +102,40 @@ Parser should be modular—each game is a plugin with its own regex/parsing logi
 \- **URL:** Check Railway dashboard for the live URL (*.up.railway.app)
 \- Railway project is connected to the Vedvart/daily-gamer repo
 
+\## Workflow Preferences
+
+\- **Always push changes to live:** After completing any feature or change, always commit and push to the repository so it auto-deploys to Railway. The user will reload the hosted website to see changes.
+\- Do not wait for explicit permission to push - deploy automatically after completing work.
+
 \## Project Structure
 
 ```
 daily-gamer/
 ├── client/                 # React frontend (Vite)
 │   ├── src/
-│   │   ├── App.jsx         # Main component
-│   │   ├── App.css         # Component styles
+│   │   ├── App.jsx         # Main app with React Router
+│   │   ├── App.css         # App container styles
 │   │   ├── main.jsx        # React entry point
-│   │   └── index.css       # Global styles (CSS variables for dark theme)
+│   │   ├── index.css       # Global styles (CSS variables for dark theme)
+│   │   ├── components/     # Reusable UI components
+│   │   │   ├── Header.jsx/css      # Navigation header
+│   │   │   ├── Footer.jsx/css      # Site footer
+│   │   │   ├── ResultInput.jsx/css # Paste input for game results
+│   │   │   ├── ResultCard.jsx/css  # Displays a single game result
+│   │   │   └── TodayResults.jsx/css # Grid of today's results
+│   │   ├── pages/          # Page components
+│   │   │   ├── HomePage.jsx/css    # Landing page
+│   │   │   └── UserPage.jsx/css    # Dashboard for scores
+│   │   ├── parsers/        # Game result parsers (modular)
+│   │   │   ├── index.js            # Parser registry
+│   │   │   ├── wordleParser.js
+│   │   │   ├── connectionsParser.js
+│   │   │   ├── miniParser.js
+│   │   │   ├── bandleParser.js
+│   │   │   ├── catfishingParser.js
+│   │   │   └── timeguessrParser.js
+│   │   └── hooks/          # Custom React hooks
+│   │       └── useGameResults.js   # localStorage state management
 │   ├── public/favicon.svg
 │   ├── index.html
 │   └── vite.config.js      # Vite config with API proxy
@@ -139,17 +163,20 @@ Completed:
 - [x] Hello World landing page with dark mode styling
 - [x] Railway deployment pipeline working
 - [x] API health check endpoint (/api/health)
+- [x] React Router setup (/ and /dashboard routes)
+- [x] Result parsing engine (modular plugin system for 6 games)
+- [x] User dashboard page with result input
+- [x] Today's results display grid
+- [x] localStorage persistence for results
 
 In Progress:
 - [ ] Add PostgreSQL database to Railway
 - [ ] Build authentication system
-- [ ] Build result parsing engine
-- [ ] Build user profiles and stats display
 
 \## Next Steps
 
 1\. Add PostgreSQL database to Railway project
 2\. Build authentication system (email/password first, then OAuth)
-3\. Build result parsing engine (modular plugin system for each game)
-4\. Build user profiles and stats display
+3\. Migrate localStorage to database storage
+4\. Add historical stats and streak tracking
 

@@ -1,0 +1,24 @@
+.user-page {
+  flex: 1;
+  padding: 2rem;
+  width: 100%;
+}
+
+.user-page__container {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.user-page__input-section {
+  margin-bottom: 1rem;
+}
+
+.user-page__results-section {
+  margin-top: 1rem;
+}
+
+@media (max-width: 600px) {
+  .user-page {
+    padding: 1rem;
+  }
+}

@@ -1,0 +1,81 @@
+.today-results {
+  margin-top: 2rem;
+}
+
+.today-results__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 1rem;
+}
+
+.today-results__title {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.today-results__date {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.today-results__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.today-results__placeholder {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  border: 2px dashed var(--input-border);
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.today-results__placeholder:hover {
+  opacity: 1;
+}
+
+.today-results__placeholder-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.5rem;
+  color: white;
+  margin: 0 auto 0.75rem;
+  opacity: 0.5;
+}
+
+.today-results__placeholder-icon--wordle { background-color: var(--game-wordle); }
+.today-results__placeholder-icon--connections { background-color: var(--game-connections); }
+.today-results__placeholder-icon--mini { background-color: var(--game-mini); }
+.today-results__placeholder-icon--bandle { background-color: var(--game-bandle); }
+.today-results__placeholder-icon--catfishing { background-color: var(--game-catfishing); }
+.today-results__placeholder-icon--timeguessr { background-color: var(--game-timeguessr); }
+
+.today-results__placeholder-name {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: var(--text-secondary);
+}
+
+.today-results__placeholder-status {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  opacity: 0.7;
+}
+
+@media (max-width: 600px) {
+  .today-results__grid {
+    grid-template-columns: 1fr;
+  }
+}
