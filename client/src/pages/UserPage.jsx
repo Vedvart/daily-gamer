@@ -7,7 +7,13 @@ import AddResultModal from '../components/AddResultModal';
 import './UserPage.css';
 
 function UserPage() {
-  const { todayResults, addResult, removeResult } = useGameResults();
+  const {
+    todayResults,
+    addResult,
+    removeResult,
+    getWordleHistogram,
+    getGamesWithResults,
+  } = useGameResults();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const handleAddResult = () => {
@@ -17,6 +23,10 @@ function UserPage() {
   const handleResultParsed = (result) => {
     addResult(result);
   };
+
+  const wordleData = getWordleHistogram();
+  const gamesWithResults = getGamesWithResults();
+  const hasAnyHistogramData = gamesWithResults.length > 0;
 
   return (
     <main className="user-page">
@@ -37,10 +47,19 @@ function UserPage() {
 
           <div className="user-page__right">
             <h2 className="user-page__section-title">Average Results</h2>
-            <div className="user-page__histograms">
-              <WordleHistogram />
-              {/* More histogram cards will be added here for other games */}
-            </div>
+            {hasAnyHistogramData ? (
+              <div className="user-page__histograms">
+                <WordleHistogram data={wordleData} />
+                {/* More histogram cards will be added here for other games */}
+              </div>
+            ) : (
+              <div className="user-page__empty-histograms">
+                <p>No historical data yet.</p>
+                <p className="user-page__empty-hint">
+                  Add results to see your statistics over time.
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

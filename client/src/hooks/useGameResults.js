@@ -130,6 +130,28 @@ function useGameResults() {
     return results.find(r => r.gameId === gameId && r.date === date);
   }, [results]);
 
+  // Get histogram data for Wordle (score distribution)
+  const getWordleHistogram = useCallback(() => {
+    const wordleResults = results.filter(r => r.gameId === 'wordle');
+    const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
+
+    wordleResults.forEach(r => {
+      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) {
+        histogram[r.scoreValue]++;
+      } else if (!r.won || r.scoreValue === 7) {
+        histogram['X']++;
+      }
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get all games that have at least one result (for showing histograms)
+  const getGamesWithResults = useCallback(() => {
+    const gameIds = new Set(results.map(r => r.gameId));
+    return Array.from(gameIds);
+  }, [results]);
+
   // Clear all results (for testing/reset)
   const clearAll = useCallback(() => {
     setResults([]);
@@ -143,6 +165,8 @@ function useGameResults() {
     removeResult,
     getStats,
     getResultForDate,
+    getWordleHistogram,
+    getGamesWithResults,
     clearAll,
   };
 }

@@ -1,21 +1,14 @@
 import './WordleHistogram.css';
 
-// Dummy data - will be replaced with real data later
-const DUMMY_WORDLE_DATA = {
-  1: 1,
-  2: 14,
-  3: 56,
-  4: 187,
-  5: 87,
-  6: 35,
-  X: 28,
-};
-
-function WordleHistogram({ data = DUMMY_WORDLE_DATA }) {
+function WordleHistogram({ data }) {
   const labels = ['1', '2', '3', '4', '5', '6', 'X'];
   const values = labels.map(label => data[label] || 0);
   const maxValue = Math.max(...values);
   const total = values.reduce((a, b) => a + b, 0);
+
+  if (total === 0) {
+    return null; // Don't render if no data
+  }
 
   return (
     <div className="histogram-card">
@@ -29,10 +22,10 @@ function WordleHistogram({ data = DUMMY_WORDLE_DATA }) {
           return (
             <div key={label} className="histogram__column">
               <div className="histogram__bar-container">
-                <span className="histogram__value">{value}</span>
+                <span className="histogram__value">{value > 0 ? value : ''}</span>
                 <div
                   className={`histogram__bar ${isFailure ? 'histogram__bar--failure' : ''}`}
-                  style={{ height: `${heightPercent}%` }}
+                  style={{ height: `${Math.max(heightPercent, value > 0 ? 4 : 0)}%` }}
                 />
               </div>
               <span className="histogram__label">{label}</span>
@@ -41,7 +34,7 @@ function WordleHistogram({ data = DUMMY_WORDLE_DATA }) {
         })}
       </div>
       <div className="histogram__total">
-        {total} games played
+        {total} game{total !== 1 ? 's' : ''} played
       </div>
     </div>
   );
