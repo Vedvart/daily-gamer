@@ -5,6 +5,10 @@
   border-left: 4px solid var(--accent-blue);
 }
 
+.result-card--compact {
+  padding: 1rem;
+}
+
 .result-card--wordle { border-left-color: var(--game-wordle); }
 .result-card--connections { border-left-color: var(--game-connections); }
 .result-card--mini { border-left-color: var(--game-mini); }
@@ -16,20 +20,29 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+.result-card:not(.result-card--compact) .result-card__header {
   margin-bottom: 0.75rem;
 }
 
 .result-card__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  font-size: 1.25rem;
+  font-size: 1rem;
   color: white;
   flex-shrink: 0;
+}
+
+.result-card--compact .result-card__icon {
+  width: 32px;
+  height: 32px;
+  font-size: 0.875rem;
 }
 
 .result-card__icon--wordle { background-color: var(--game-wordle); }
@@ -45,10 +58,14 @@
 }
 
 .result-card__game {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   margin: 0;
   line-height: 1.2;
+}
+
+.result-card--compact .result-card__game {
+  font-size: 0.875rem;
 }
 
 .result-card__puzzle {
@@ -57,9 +74,13 @@
 }
 
 .result-card__score {
-  font-size: 1.5rem;
+  font-size: 1.25rem;
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.result-card--compact .result-card__score {
+  font-size: 1.125rem;
 }
 
 .result-card__grid {
