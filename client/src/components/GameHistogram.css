@@ -16,8 +16,8 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  height: 120px;
-  gap: 0.5rem;
+  height: 100px;
+  gap: 0.35rem;
   padding-bottom: 0.5rem;
 }
 
@@ -27,6 +27,7 @@
   align-items: center;
   flex: 1;
   height: 100%;
+  min-width: 0;
 }
 
 .histogram__bar-container {
@@ -40,37 +41,50 @@
 }
 
 .histogram__value {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   color: var(--text-secondary);
-  margin-bottom: 4px;
-  min-height: 14px;
+  margin-bottom: 3px;
+  min-height: 12px;
 }
 
 .histogram__bar {
   width: 100%;
-  max-width: 32px;
-  background-color: var(--game-wordle);
-  border-radius: 3px 3px 0 0;
-  min-height: 4px;
+  max-width: 28px;
+  background-color: var(--accent-blue);
+  border-radius: 2px 2px 0 0;
+  min-height: 2px;
   transition: height 0.3s ease;
+}
+
+.histogram__bar--default {
+  background-color: var(--accent-blue);
 }
 
 .histogram__bar--failure {
   background-color: var(--error);
 }
 
+.histogram__bar--perfect {
+  background-color: var(--accent-green);
+}
+
 .histogram__label {
-  font-size: 0.75rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-top: 0.5rem;
+  margin-top: 0.4rem;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
 }
 
 .histogram__total {
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   color: var(--text-secondary);
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
   border-top: 1px solid var(--input-border);
 }

@@ -130,21 +130,142 @@ function useGameResults() {
     return results.find(r => r.gameId === gameId && r.date === date);
   }, [results]);
 
-  // Get histogram data for Wordle (score distribution)
+  // ============ HISTOGRAM FUNCTIONS ============
+
+  // Get histogram data for Wordle (score distribution 1-6, X)
   const getWordleHistogram = useCallback(() => {
-    const wordleResults = results.filter(r => r.gameId === 'wordle');
+    const gameResults = results.filter(r => r.gameId === 'wordle');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
 
-    wordleResults.forEach(r => {
+    gameResults.forEach(r => {
       if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) {
         histogram[r.scoreValue]++;
-      } else if (!r.won || r.scoreValue === 7) {
+      } else {
         histogram['X']++;
       }
     });
 
     return histogram;
   }, [results]);
+
+  // Get histogram data for Connections (mistakes: 0-3, X for failed)
+  const getConnectionsHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'connections');
+    const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, X: 0 };
+
+    gameResults.forEach(r => {
+      if (r.won) {
+        // scoreValue is 4 - mistakes, so mistakes = 4 - scoreValue
+        const mistakes = 4 - r.scoreValue;
+        if (mistakes >= 0 && mistakes <= 3) {
+          histogram[mistakes]++;
+        } else {
+          histogram[0]++; // Perfect if we can't determine
+        }
+      } else {
+        histogram['X']++;
+      }
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for NYT Mini (time buckets)
+  const getMiniHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'mini');
+    const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
+
+    gameResults.forEach(r => {
+      const seconds = r.scoreValue; // scoreValue is time in seconds
+      if (seconds < 30) {
+        histogram['<30s']++;
+      } else if (seconds < 60) {
+        histogram['30-60s']++;
+      } else if (seconds < 120) {
+        histogram['1-2m']++;
+      } else if (seconds < 180) {
+        histogram['2-3m']++;
+      } else {
+        histogram['3m+']++;
+      }
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Bandle (score distribution 1-6, X)
+  const getBandleHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'bandle');
+    const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
+
+    gameResults.forEach(r => {
+      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) {
+        histogram[r.scoreValue]++;
+      } else {
+        histogram['X']++;
+      }
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Catfishing (score ranges 1-10)
+  const getCatfishingHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'catfishing');
+    const histogram = { '1-2': 0, '3-4': 0, '5-6': 0, '7-8': 0, '9-10': 0 };
+
+    gameResults.forEach(r => {
+      const score = r.scoreValue;
+      if (score <= 2) {
+        histogram['1-2']++;
+      } else if (score <= 4) {
+        histogram['3-4']++;
+      } else if (score <= 6) {
+        histogram['5-6']++;
+      } else if (score <= 8) {
+        histogram['7-8']++;
+      } else {
+        histogram['9-10']++;
+      }
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for TimeGuessr (percentage ranges)
+  const getTimeguessrHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'timeguessr');
+    const histogram = { '0-20%': 0, '20-40%': 0, '40-60%': 0, '60-80%': 0, '80-100%': 0 };
+
+    gameResults.forEach(r => {
+      const percent = (r.scoreValue / 50000) * 100;
+      if (percent < 20) {
+        histogram['0-20%']++;
+      } else if (percent < 40) {
+        histogram['20-40%']++;
+      } else if (percent < 60) {
+        histogram['40-60%']++;
+      } else if (percent < 80) {
+        histogram['60-80%']++;
+      } else {
+        histogram['80-100%']++;
+      }
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get all histogram data at once
+  const getAllHistograms = useCallback(() => {
+    return {
+      wordle: getWordleHistogram(),
+      connections: getConnectionsHistogram(),
+      mini: getMiniHistogram(),
+      bandle: getBandleHistogram(),
+      catfishing: getCatfishingHistogram(),
+      timeguessr: getTimeguessrHistogram(),
+    };
+  }, [getWordleHistogram, getConnectionsHistogram, getMiniHistogram, getBandleHistogram, getCatfishingHistogram, getTimeguessrHistogram]);
 
   // Get all games that have at least one result (for showing histograms)
   const getGamesWithResults = useCallback(() => {
@@ -166,6 +287,12 @@ function useGameResults() {
     getStats,
     getResultForDate,
     getWordleHistogram,
+    getConnectionsHistogram,
+    getMiniHistogram,
+    getBandleHistogram,
+    getCatfishingHistogram,
+    getTimeguessrHistogram,
+    getAllHistograms,
     getGamesWithResults,
     clearAll,
   };

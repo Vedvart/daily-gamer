@@ -2,7 +2,14 @@ import { useState } from 'react';
 import useGameResults from '../hooks/useGameResults';
 import ProfileHeader from '../components/ProfileHeader';
 import TodayResults from '../components/TodayResults';
-import WordleHistogram from '../components/WordleHistogram';
+import {
+  WordleHistogram,
+  ConnectionsHistogram,
+  MiniHistogram,
+  BandleHistogram,
+  CatfishingHistogram,
+  TimeguessrHistogram,
+} from '../components/GameHistogram';
 import AddResultModal from '../components/AddResultModal';
 import './UserPage.css';
 
@@ -11,7 +18,7 @@ function UserPage() {
     todayResults,
     addResult,
     removeResult,
-    getWordleHistogram,
+    getAllHistograms,
     getGamesWithResults,
   } = useGameResults();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -24,7 +31,7 @@ function UserPage() {
     addResult(result);
   };
 
-  const wordleData = getWordleHistogram();
+  const histograms = getAllHistograms();
   const gamesWithResults = getGamesWithResults();
   const hasAnyHistogramData = gamesWithResults.length > 0;
 
@@ -49,8 +56,24 @@ function UserPage() {
             <h2 className="user-page__section-title">Average Results</h2>
             {hasAnyHistogramData ? (
               <div className="user-page__histograms">
-                <WordleHistogram data={wordleData} />
-                {/* More histogram cards will be added here for other games */}
+                {gamesWithResults.includes('wordle') && (
+                  <WordleHistogram data={histograms.wordle} />
+                )}
+                {gamesWithResults.includes('connections') && (
+                  <ConnectionsHistogram data={histograms.connections} />
+                )}
+                {gamesWithResults.includes('mini') && (
+                  <MiniHistogram data={histograms.mini} />
+                )}
+                {gamesWithResults.includes('bandle') && (
+                  <BandleHistogram data={histograms.bandle} />
+                )}
+                {gamesWithResults.includes('catfishing') && (
+                  <CatfishingHistogram data={histograms.catfishing} />
+                )}
+                {gamesWithResults.includes('timeguessr') && (
+                  <TimeguessrHistogram data={histograms.timeguessr} />
+                )}
               </div>
             ) : (
               <div className="user-page__empty-histograms">
