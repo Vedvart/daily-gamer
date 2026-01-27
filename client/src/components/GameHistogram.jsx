@@ -116,20 +116,85 @@ export function BandleHistogram({ data }) {
   );
 }
 
-// Catfishing Histogram: Individual scores 0-10
+// Catfishing Histogram: Half-point increments 0, 0.5, 1, 1.5, ... 10
 export function CatfishingHistogram({ data }) {
-  const labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
-  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
-  const colors = { '10': 'perfect', '9': 'perfect', '0': 'failure', '1': 'failure', '2': 'failure' };
+  // Generate labels for 0, 0.5, 1, 1.5, ... 10
+  const numericLabels = [];
+  for (let i = 0; i <= 20; i++) {
+    numericLabels.push(i / 2);
+  }
+
+  const total = numericLabels.reduce((sum, l) => sum + (data[l] || 0), 0);
+
+  // Only 0 is failure (pink), everything else is green
+  const colors = { '0': 'failure' };
+
+  // Format label: show ½ for half values, number for whole
+  const formatLabel = (l) => {
+    const num = parseFloat(l);
+    if (num === Math.floor(num)) {
+      return String(num);
+    }
+    return '½';
+  };
+
+  // Format value with K notation for thousands
+  const formatValue = (v) => {
+    if (v >= 1000) {
+      const k = v / 1000;
+      return k % 1 === 0 ? `${k}K` : `${k.toFixed(1)}K`;
+    }
+    return v > 0 ? String(v) : '';
+  };
 
   return (
-    <GameHistogram
-      title="Catfishing"
+    <CatfishingHistogramCustom
       data={data}
-      labels={labels}
+      labels={numericLabels}
       colors={colors}
       total={total}
+      formatLabel={formatLabel}
+      formatValue={formatValue}
     />
+  );
+}
+
+// Custom component for Catfishing with value formatting
+function CatfishingHistogramCustom({ data, labels, colors, total, formatLabel, formatValue }) {
+  const values = labels.map(label => data[label] || 0);
+  const maxValue = Math.max(...values, 1);
+
+  if (total === 0) {
+    return null;
+  }
+
+  return (
+    <div className="histogram-card histogram-card--catfishing">
+      <h3 className="histogram-card__title">Catfishing</h3>
+      <div className="histogram histogram--catfishing">
+        {labels.map((label, index) => {
+          const value = values[index];
+          const heightPercent = maxValue > 0 ? (value / maxValue) * 100 : 0;
+          const color = colors[String(label)] || 'catfishing';
+
+          return (
+            <div key={label} className="histogram__column">
+              <div className="histogram__bar-container">
+                <span className="histogram__value">{formatValue(value)}</span>
+                <div
+                  className={`histogram__bar histogram__bar--${color}`}
+                  style={{ height: `${Math.max(heightPercent, value > 0 ? 4 : 0)}%` }}
+                />
+              </div>
+              <span className="histogram__label">{formatLabel(label)}</span>
+            </div>
+          );
+        })}
+      </div>
+      <div className="histogram__total">
+        {total} game{total !== 1 ? 's' : ''} played
+      </div>
+    </div>
   );
 }
 

@@ -213,15 +213,21 @@ function useGameResults() {
     return histogram;
   }, [results]);
 
-  // Get histogram data for Catfishing (individual scores 0-10)
+  // Get histogram data for Catfishing (half-point increments 0, 0.5, 1, 1.5, ... 10)
   const getCatfishingHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'catfishing');
-    const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0, 10: 0 };
+    // Initialize all half-point buckets
+    const histogram = {};
+    for (let i = 0; i <= 20; i++) {
+      histogram[i / 2] = 0;
+    }
 
     gameResults.forEach(r => {
       const score = r.scoreValue;
-      if (score >= 0 && score <= 10) {
-        histogram[score]++;
+      // Round to nearest 0.5
+      const bucket = Math.round(score * 2) / 2;
+      if (bucket >= 0 && bucket <= 10) {
+        histogram[bucket]++;
       }
     });
 
