@@ -14,10 +14,25 @@
 /* Game-specific accent colors */
 .result-card--wordle { --card-accent: var(--game-wordle); }
 .result-card--connections { --card-accent: var(--game-connections); }
+.result-card--strands { --card-accent: var(--game-strands); }
 .result-card--mini { --card-accent: var(--game-mini); }
+.result-card--latimesmini { --card-accent: var(--game-latimesmini); }
 .result-card--bandle { --card-accent: var(--game-bandle); }
 .result-card--catfishing { --card-accent: var(--game-catfishing); }
 .result-card--timeguessr { --card-accent: var(--game-timeguessr); }
+.result-card--travle { --card-accent: var(--game-travle); }
+.result-card--flagle { --card-accent: var(--game-flagle); }
+.result-card--kindahardgolf { --card-accent: var(--game-kindahardgolf); }
+.result-card--enclosehorse { --card-accent: var(--game-enclosehorse); }
+.result-card--kickoffleague { --card-accent: var(--game-kickoffleague); }
+.result-card--scrandle { --card-accent: var(--game-scrandle); }
+.result-card--oneuppuzzle { --card-accent: var(--game-oneuppuzzle); }
+.result-card--cluesbysam { --card-accent: var(--game-cluesbysam); }
+.result-card--minutecryptic { --card-accent: var(--game-minutecryptic); }
+.result-card--dailydozen { --card-accent: var(--game-dailydozen); }
+.result-card--moreorless { --card-accent: var(--game-moreorless); }
+.result-card--eruptle { --card-accent: var(--game-eruptle); }
+.result-card--thrice { --card-accent: var(--game-thrice); }
 
 /* Decorative background accent */
 .result-card__bg-accent {
@@ -81,10 +96,25 @@
 
 .result-card__icon--wordle { background: linear-gradient(135deg, var(--game-wordle), #3a6b35); }
 .result-card__icon--connections { background: linear-gradient(135deg, var(--game-connections), #7c3aed); }
+.result-card__icon--strands { background: linear-gradient(135deg, var(--game-strands), #3b82f6); }
 .result-card__icon--mini { background: linear-gradient(135deg, var(--game-mini), #1d4ed8); }
+.result-card__icon--latimesmini { background: linear-gradient(135deg, var(--game-latimesmini), #d97706); }
 .result-card__icon--bandle { background: linear-gradient(135deg, var(--game-bandle), #ca8a04); }
 .result-card__icon--catfishing { background: linear-gradient(135deg, var(--game-catfishing), #c2410c); }
 .result-card__icon--timeguessr { background: linear-gradient(135deg, var(--game-timeguessr), #15803d); }
+.result-card__icon--travle { background: linear-gradient(135deg, var(--game-travle), #059669); }
+.result-card__icon--flagle { background: linear-gradient(135deg, var(--game-flagle), #dc2626); }
+.result-card__icon--kindahardgolf { background: linear-gradient(135deg, var(--game-kindahardgolf), #65a30d); }
+.result-card__icon--enclosehorse { background: linear-gradient(135deg, var(--game-enclosehorse), #7c3aed); }
+.result-card__icon--kickoffleague { background: linear-gradient(135deg, var(--game-kickoffleague), #0891b2); }
+.result-card__icon--scrandle { background: linear-gradient(135deg, var(--game-scrandle), #db2777); }
+.result-card__icon--oneuppuzzle { background: linear-gradient(135deg, var(--game-oneuppuzzle), #0d9488); }
+.result-card__icon--cluesbysam { background: linear-gradient(135deg, var(--game-cluesbysam), #ec4899); }
+.result-card__icon--minutecryptic { background: linear-gradient(135deg, var(--game-minutecryptic), #8b5cf6); }
+.result-card__icon--dailydozen { background: linear-gradient(135deg, var(--game-dailydozen), #f59e0b); }
+.result-card__icon--moreorless { background: linear-gradient(135deg, var(--game-moreorless), #4f46e5); }
+.result-card__icon--eruptle { background: linear-gradient(135deg, var(--game-eruptle), #b91c1c); }
+.result-card__icon--thrice { background: linear-gradient(135deg, var(--game-thrice), #0284c7); }
 
 .result-card__titles {
   display: flex;

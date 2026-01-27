@@ -18,10 +18,25 @@
   /* Game-specific accent colors */
   --game-wordle: #538d4e;
   --game-connections: #a855f7;
+  --game-strands: #60a5fa;
   --game-mini: #3b82f6;
+  --game-latimesmini: #f59e0b;
   --game-bandle: #eab308;
   --game-catfishing: #f97316;
   --game-timeguessr: #22c55e;
+  --game-travle: #10b981;
+  --game-flagle: #ef4444;
+  --game-kindahardgolf: #84cc16;
+  --game-enclosehorse: #8b5cf6;
+  --game-kickoffleague: #06b6d4;
+  --game-scrandle: #ec4899;
+  --game-oneuppuzzle: #14b8a6;
+  --game-cluesbysam: #f472b6;
+  --game-minutecryptic: #a78bfa;
+  --game-dailydozen: #fbbf24;
+  --game-moreorless: #6366f1;
+  --game-eruptle: #dc2626;
+  --game-thrice: #0ea5e9;
 
   /* Input styling */
   --input-bg: #1e1e32;

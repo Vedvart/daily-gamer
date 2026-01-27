@@ -1,15 +1,39 @@
 import { useState, useRef, useEffect } from 'react';
 import './ScorecardModal.css';
 
-const gameOrder = ['wordle', 'connections', 'mini', 'bandle', 'catfishing', 'timeguessr'];
+const gameOrder = [
+  'wordle', 'connections', 'strands', 'mini', 'latimesmini',
+  'bandle', 'catfishing', 'timeguessr', 'travle', 'flagle',
+  'kindahardgolf', 'enclosehorse', 'kickoffleague', 'scrandle',
+  'oneuppuzzle', 'cluesbysam', 'minutecryptic', 'dailydozen',
+  'moreorless', 'eruptle', 'thrice'
+];
 const gameNames = {
   wordle: 'Wordle',
   connections: 'Connections',
+  strands: 'Strands',
   mini: 'NYT Mini',
+  latimesmini: 'LA Times Mini',
   bandle: 'Bandle',
   catfishing: 'Catfishing',
   timeguessr: 'TimeGuessr',
+  travle: 'Travle',
+  flagle: 'Flagle',
+  kindahardgolf: 'Kinda Hard Golf',
+  enclosehorse: 'enclose.horse',
+  kickoffleague: 'Kickoff League',
+  scrandle: 'Scrandle',
+  oneuppuzzle: 'One Up Puzzle',
+  cluesbysam: 'Clues By Sam',
+  minutecryptic: 'Minute Cryptic',
+  dailydozen: 'Daily Dozen',
+  moreorless: 'More Or Less',
+  eruptle: 'Eruptle',
+  thrice: 'Thrice',
 };
+
+// Games with finite tries that can "fail"
+const finiteTriesGames = ['wordle', 'bandle', 'connections'];
 
 function generateFullText(results) {
   const sortedResults = [...results].sort(
@@ -25,6 +49,7 @@ function generateCompactText(results) {
   );
 
   const lines = sortedResults.map(r => {
+    const gameName = gameNames[r.gameId] || r.gameName;
     switch (r.gameId) {
       case 'wordle':
         return `Wordle #${r.puzzleNumber}: ${r.won ? r.score : 'X/6'}`;
@@ -32,16 +57,46 @@ function generateCompactText(results) {
         if (r.isReversePerfect) return `Connections #${r.puzzleNumber}: Reverse Perfect`;
         if (r.isPurpleFirst) return `Connections #${r.puzzleNumber}: Purple First`;
         return `Connections #${r.puzzleNumber}: ${r.won ? `${r.scoreValue} mistakes` : 'Failed'}`;
+      case 'strands':
+        return `Strands #${r.puzzleNumber}: ${r.score}`;
       case 'mini':
-        return `Mini #${r.puzzleNumber}: ${r.score}`;
+        return `NYT Mini #${r.puzzleNumber}: ${r.score}`;
+      case 'latimesmini':
+        return `LA Times Mini #${r.puzzleNumber}: ${r.score}`;
       case 'bandle':
         return `Bandle #${r.puzzleNumber}: ${r.won ? r.score : 'X/6'}`;
       case 'catfishing':
         return `Catfishing #${r.puzzleNumber}: ${r.score}`;
       case 'timeguessr':
         return `TimeGuessr #${r.puzzleNumber}: ${r.score}`;
+      case 'travle':
+        return `Travle #${r.puzzleNumber}: ${r.score}`;
+      case 'flagle':
+        return `Flagle #${r.puzzleNumber}: ${r.score}`;
+      case 'kindahardgolf':
+        return `Kinda Hard Golf #${r.puzzleNumber}: ${r.score}`;
+      case 'enclosehorse':
+        return `enclose.horse Day ${r.puzzleNumber}: ${r.score}`;
+      case 'kickoffleague':
+        return `Kickoff League #${r.puzzleNumber}: ${r.score}`;
+      case 'scrandle':
+        return `Scrandle #${r.puzzleNumber}: ${r.score}`;
+      case 'oneuppuzzle':
+        return `One Up #${r.puzzleNumber}: ${r.score}`;
+      case 'cluesbysam':
+        return `Clues By Sam #${r.puzzleNumber}: ${r.score}`;
+      case 'minutecryptic':
+        return `Minute Cryptic #${r.puzzleNumber}: ${r.score}`;
+      case 'dailydozen':
+        return `Daily Dozen #${r.puzzleNumber}: ${r.score}`;
+      case 'moreorless':
+        return `More Or Less #${r.puzzleNumber}: ${r.score}`;
+      case 'eruptle':
+        return `Eruptle #${r.puzzleNumber}: ${r.score}`;
+      case 'thrice':
+        return `Thrice #${r.puzzleNumber}: ${r.score}`;
       default:
-        return `${r.gameName} #${r.puzzleNumber}: ${r.score}`;
+        return `${gameName} #${r.puzzleNumber}: ${r.score}`;
     }
   });
 
@@ -147,17 +202,38 @@ function ScorecardModal({ isOpen, onClose, results }) {
     const gameColors = {
       wordle: '#538d4e',
       connections: '#a855f7',
+      strands: '#60a5fa',
       mini: '#3b82f6',
+      latimesmini: '#f59e0b',
       bandle: '#eab308',
       catfishing: '#f97316',
       timeguessr: '#22c55e',
+      travle: '#10b981',
+      flagle: '#ef4444',
+      kindahardgolf: '#84cc16',
+      enclosehorse: '#8b5cf6',
+      kickoffleague: '#06b6d4',
+      scrandle: '#ec4899',
+      oneuppuzzle: '#14b8a6',
+      cluesbysam: '#f472b6',
+      minutecryptic: '#a78bfa',
+      dailydozen: '#fbbf24',
+      moreorless: '#6366f1',
+      eruptle: '#dc2626',
+      thrice: '#0ea5e9',
     };
 
-    // Draw cards
+    // Draw cards with centering for incomplete rows
     sortedResults.forEach((result, i) => {
       const col = i % 3;
       const row = Math.floor(i / 3);
-      const x = padding + col * (cardWidth + cardGap);
+
+      // Calculate how many cards are in this row for centering
+      const cardsInThisRow = Math.min(3, sortedResults.length - row * 3);
+      const rowWidth = cardsInThisRow * cardWidth + (cardsInThisRow - 1) * cardGap;
+      const rowOffset = (width - padding * 2 - rowWidth) / 2;
+
+      const x = padding + rowOffset + col * (cardWidth + cardGap);
       const y = padding + 60 + row * (cardHeight + cardGap);
 
       // Card background
@@ -202,11 +278,20 @@ function ScorecardModal({ isOpen, onClose, results }) {
       ctx.textAlign = 'right';
       ctx.fillText(result.score, x + cardWidth - 16, iconY + 22);
 
-      // Status
-      const statusText = result.won ? 'Solved' : 'Failed';
-      ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
-      ctx.font = '11px system-ui, -apple-system, sans-serif';
-      ctx.fillText(statusText, x + cardWidth - 16, y + cardHeight - 16);
+      // Status - only show "Failed" for games with finite tries
+      let statusText;
+      if (result.won) {
+        statusText = 'Solved';
+      } else if (finiteTriesGames.includes(result.gameId)) {
+        statusText = 'Failed';
+      } else {
+        statusText = ''; // Don't show status for score-based games
+      }
+      if (statusText) {
+        ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
+        ctx.font = '11px system-ui, -apple-system, sans-serif';
+        ctx.fillText(statusText, x + cardWidth - 16, y + cardHeight - 16);
+      }
     });
 
     // Watermark

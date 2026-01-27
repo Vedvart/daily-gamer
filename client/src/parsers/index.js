@@ -3,18 +3,48 @@
 
 import wordleParser from './wordleParser';
 import connectionsParser from './connectionsParser';
+import strandsParser from './strandsParser';
 import miniParser from './miniParser';
+import latimesMiniParser from './latimesMiniParser';
 import bandleParser from './bandleParser';
 import catfishingParser from './catfishingParser';
 import timeguessrParser from './timeguessrParser';
+import travleParser from './travleParser';
+import flagleParser from './flagleParser';
+import kindahardgolfParser from './kindahardgolfParser';
+import enclosehorseParser from './enclosehorseParser';
+import kickoffleagueParser from './kickoffleagueParser';
+import scrandleParser from './scrandleParser';
+import oneuppuzzleParser from './oneuppuzzleParser';
+import cluesbysamParser from './cluesbysamParser';
+import minutecrypticParser from './minutecrypticParser';
+import dailydozenParser from './dailydozenParser';
+import moreorlessParser from './moreorlessParser';
+import eruptleParser from './eruptleParser';
+import thriceParser from './thriceParser';
 
 const parsers = [
   wordleParser,
   connectionsParser,
+  strandsParser,
   miniParser,
+  latimesMiniParser,
   bandleParser,
   catfishingParser,
   timeguessrParser,
+  travleParser,
+  flagleParser,
+  kindahardgolfParser,
+  enclosehorseParser,
+  kickoffleagueParser,
+  scrandleParser,
+  oneuppuzzleParser,
+  cluesbysamParser,
+  minutecrypticParser,
+  dailydozenParser,
+  moreorlessParser,
+  eruptleParser,
+  thriceParser,
 ];
 
 /**
