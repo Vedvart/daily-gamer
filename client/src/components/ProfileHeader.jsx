@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import './ProfileHeader.css';
 
-function ProfileHeader({ username = "Player", isOwner = true, onAddResult }) {
+function ProfileHeader({ username = "Player", isOwner = true, onAddResult, onGenerateScorecard }) {
   const [showTooltip, setShowTooltip] = useState(false);
 
   const handleCustomize = () => {
@@ -35,6 +35,12 @@ function ProfileHeader({ username = "Player", isOwner = true, onAddResult }) {
               </div>
             )}
           </div>
+          <button
+            className="profile-header__button profile-header__button--accent"
+            onClick={onGenerateScorecard}
+          >
+            Generate Scorecard
+          </button>
           <button
             className="profile-header__button profile-header__button--primary"
             onClick={onAddResult}

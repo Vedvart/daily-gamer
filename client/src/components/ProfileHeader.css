@@ -75,6 +75,17 @@
   transform: translateY(-1px);
 }
 
+.profile-header__button--accent {
+  background: linear-gradient(135deg, #a855f7, #6366f1);
+  color: white;
+  border-color: transparent;
+}
+
+.profile-header__button--accent:hover {
+  background: linear-gradient(135deg, #9333ea, #4f46e5);
+  transform: translateY(-1px);
+}
+
 .profile-header__tooltip {
   position: absolute;
   top: calc(100% + 8px);

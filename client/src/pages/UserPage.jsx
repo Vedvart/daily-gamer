@@ -11,6 +11,7 @@ import {
   TimeguessrHistogram,
 } from '../components/GameHistogram';
 import AddResultModal from '../components/AddResultModal';
+import ScorecardModal from '../components/ScorecardModal';
 import './UserPage.css';
 
 function UserPage() {
@@ -23,9 +24,14 @@ function UserPage() {
     clearAll,
   } = useGameResults();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isScorecardOpen, setIsScorecardOpen] = useState(false);
 
   const handleAddResult = () => {
     setIsModalOpen(true);
+  };
+
+  const handleGenerateScorecard = () => {
+    setIsScorecardOpen(true);
   };
 
   const handleResultParsed = (result) => {
@@ -49,6 +55,7 @@ function UserPage() {
           username="Player"
           isOwner={true}
           onAddResult={handleAddResult}
+          onGenerateScorecard={handleGenerateScorecard}
         />
 
         <div className="user-page__content">
@@ -107,6 +114,12 @@ function UserPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onResultParsed={handleResultParsed}
+      />
+
+      <ScorecardModal
+        isOpen={isScorecardOpen}
+        onClose={() => setIsScorecardOpen(false)}
+        results={todayResults}
       />
     </main>
   );
