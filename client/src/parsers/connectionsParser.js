@@ -43,11 +43,15 @@ const connectionsParser = {
       }
     });
 
-    // Check for special achievements (only if no mistakes and 4 successful rows)
+    // Game is won if all 4 categories were found (4 successful rows)
+    const won = rowColors.length === 4;
+    const scoreValue = 4 - mistakes;
+
+    // Check for special achievements (only if no mistakes and won)
     let isReversePerfect = false;
     let isPurpleFirst = false;
 
-    if (mistakes === 0 && rowColors.length === 4) {
+    if (won && mistakes === 0) {
       // Reverse Perfect: Purple → Blue → Green → Yellow
       const reverseOrder = ['🟪', '🟦', '🟩', '🟨'];
       isReversePerfect = rowColors.every((color, i) => color === reverseOrder[i]);
@@ -57,10 +61,6 @@ const connectionsParser = {
         isPurpleFirst = true;
       }
     }
-
-    // Determine score display
-    const won = gridLines.length >= 4 && rowColors.length === 4;
-    const scoreValue = 4 - mistakes;
 
     let score;
     if (isReversePerfect) {
