@@ -5,10 +5,25 @@ import TodayResults from '../components/TodayResults';
 import {
   WordleHistogram,
   ConnectionsHistogram,
+  StrandsHistogram,
   MiniHistogram,
+  LatimesMiniHistogram,
   BandleHistogram,
   CatfishingHistogram,
   TimeguessrHistogram,
+  TravleHistogram,
+  FlagleHistogram,
+  KindahardgolfHistogram,
+  EnclosehorseHistogram,
+  KickoffleagueHistogram,
+  ScrandleHistogram,
+  OneuppuzzleHistogram,
+  CluesbysamHistogram,
+  MinutecrypticHistogram,
+  DailydozenHistogram,
+  MoreorlessHistogram,
+  EruptleHistogram,
+  ThriceHistogram,
 } from '../components/GameHistogram';
 import AddResultModal from '../components/AddResultModal';
 import ScorecardModal from '../components/ScorecardModal';
@@ -78,8 +93,14 @@ function UserPage() {
                 {gamesWithResults.includes('connections') && (
                   <ConnectionsHistogram data={histograms.connections} />
                 )}
+                {gamesWithResults.includes('strands') && (
+                  <StrandsHistogram data={histograms.strands} />
+                )}
                 {gamesWithResults.includes('mini') && (
                   <MiniHistogram data={histograms.mini} />
+                )}
+                {gamesWithResults.includes('latimesmini') && (
+                  <LatimesMiniHistogram data={histograms.latimesmini} />
                 )}
                 {gamesWithResults.includes('bandle') && (
                   <BandleHistogram data={histograms.bandle} />
@@ -89,6 +110,45 @@ function UserPage() {
                 )}
                 {gamesWithResults.includes('timeguessr') && (
                   <TimeguessrHistogram data={histograms.timeguessr} />
+                )}
+                {gamesWithResults.includes('travle') && (
+                  <TravleHistogram data={histograms.travle} />
+                )}
+                {gamesWithResults.includes('flagle') && (
+                  <FlagleHistogram data={histograms.flagle} />
+                )}
+                {gamesWithResults.includes('kindahardgolf') && (
+                  <KindahardgolfHistogram data={histograms.kindahardgolf} />
+                )}
+                {gamesWithResults.includes('enclosehorse') && (
+                  <EnclosehorseHistogram data={histograms.enclosehorse} />
+                )}
+                {gamesWithResults.includes('kickoffleague') && (
+                  <KickoffleagueHistogram data={histograms.kickoffleague} />
+                )}
+                {gamesWithResults.includes('scrandle') && (
+                  <ScrandleHistogram data={histograms.scrandle} />
+                )}
+                {gamesWithResults.includes('oneuppuzzle') && (
+                  <OneuppuzzleHistogram data={histograms.oneuppuzzle} />
+                )}
+                {gamesWithResults.includes('cluesbysam') && (
+                  <CluesbysamHistogram data={histograms.cluesbysam} />
+                )}
+                {gamesWithResults.includes('minutecryptic') && (
+                  <MinutecrypticHistogram data={histograms.minutecryptic} />
+                )}
+                {gamesWithResults.includes('dailydozen') && (
+                  <DailydozenHistogram data={histograms.dailydozen} />
+                )}
+                {gamesWithResults.includes('moreorless') && (
+                  <MoreorlessHistogram data={histograms.moreorless} />
+                )}
+                {gamesWithResults.includes('eruptle') && (
+                  <EruptleHistogram data={histograms.eruptle} />
+                )}
+                {gamesWithResults.includes('thrice') && (
+                  <ThriceHistogram data={histograms.thrice} />
                 )}
               </div>
             ) : (

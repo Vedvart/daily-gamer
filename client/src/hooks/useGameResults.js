@@ -259,17 +259,294 @@ function useGameResults() {
     return histogram;
   }, [results]);
 
+  // Get histogram data for Strands (hints used)
+  const getStrandsHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'strands');
+    const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, '4+': 0 };
+
+    gameResults.forEach(r => {
+      const hints = r.scoreValue || 0;
+      if (hints === 0) histogram[0]++;
+      else if (hints === 1) histogram[1]++;
+      else if (hints === 2) histogram[2]++;
+      else if (hints === 3) histogram[3]++;
+      else histogram['4+']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for LA Times Mini (same as NYT Mini - time buckets)
+  const getLatimesMiniHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'latimesmini');
+    const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
+
+    gameResults.forEach(r => {
+      const seconds = r.scoreValue;
+      if (seconds < 30) histogram['<30s']++;
+      else if (seconds < 60) histogram['30-60s']++;
+      else if (seconds < 120) histogram['1-2m']++;
+      else if (seconds < 180) histogram['2-3m']++;
+      else histogram['3m+']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Travle (extra guesses)
+  const getTravleHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'travle');
+    const histogram = { '+0': 0, '+1': 0, '+2': 0, '+3': 0, '+4': 0, '+5+': 0 };
+
+    gameResults.forEach(r => {
+      const extra = r.scoreValue || 0;
+      if (extra === 0) histogram['+0']++;
+      else if (extra === 1) histogram['+1']++;
+      else if (extra === 2) histogram['+2']++;
+      else if (extra === 3) histogram['+3']++;
+      else if (extra === 4) histogram['+4']++;
+      else histogram['+5+']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Flagle (guesses 1-6, X)
+  const getFlagleHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'flagle');
+    const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
+
+    gameResults.forEach(r => {
+      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) {
+        histogram[r.scoreValue]++;
+      } else {
+        histogram['X']++;
+      }
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Kinda Hard Golf (strokes)
+  const getKindahardgolfHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'kindahardgolf');
+    const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
+
+    gameResults.forEach(r => {
+      const strokes = r.scoreValue || 0;
+      if (strokes === 1) histogram[1]++;
+      else if (strokes === 2) histogram[2]++;
+      else if (strokes === 3) histogram[3]++;
+      else if (strokes === 4) histogram[4]++;
+      else if (strokes === 5) histogram[5]++;
+      else histogram['6+']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for enclose.horse (percentage buckets)
+  const getEnclosehorseHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'enclosehorse');
+    const histogram = { '0-20': 0, '21-40': 0, '41-60': 0, '61-80': 0, '81-99': 0, '100': 0 };
+
+    gameResults.forEach(r => {
+      const pct = r.scoreValue || 0;
+      if (pct === 100) histogram['100']++;
+      else if (pct >= 81) histogram['81-99']++;
+      else if (pct >= 61) histogram['61-80']++;
+      else if (pct >= 41) histogram['41-60']++;
+      else if (pct >= 21) histogram['21-40']++;
+      else histogram['0-20']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Kickoff League (kicks)
+  const getKickoffleagueHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'kickoffleague');
+    const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
+
+    gameResults.forEach(r => {
+      const kicks = r.scoreValue || 0;
+      if (kicks === 1) histogram[1]++;
+      else if (kicks === 2) histogram[2]++;
+      else if (kicks === 3) histogram[3]++;
+      else if (kicks === 4) histogram[4]++;
+      else if (kicks === 5) histogram[5]++;
+      else histogram['6+']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Scrandle (score out of 10)
+  const getScrandleHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'scrandle');
+    const histogram = {};
+    for (let i = 0; i <= 10; i++) histogram[i] = 0;
+
+    gameResults.forEach(r => {
+      const score = Math.min(10, Math.max(0, r.scoreValue || 0));
+      histogram[Math.round(score)]++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for One Up Puzzle (time buckets)
+  const getOneuppuzzleHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'oneuppuzzle');
+    const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
+
+    gameResults.forEach(r => {
+      const seconds = r.scoreValue || 0;
+      if (seconds < 60) histogram['<1m']++;
+      else if (seconds < 120) histogram['1-2m']++;
+      else if (seconds < 300) histogram['2-5m']++;
+      else if (seconds < 600) histogram['5-10m']++;
+      else histogram['10m+']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Clues By Sam (time buckets)
+  const getCluesbysamHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'cluesbysam');
+    const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
+
+    gameResults.forEach(r => {
+      const seconds = r.scoreValue || 0;
+      if (seconds < 60) histogram['<1m']++;
+      else if (seconds < 120) histogram['1-2m']++;
+      else if (seconds < 300) histogram['2-5m']++;
+      else if (seconds < 600) histogram['5-10m']++;
+      else histogram['10m+']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Minute Cryptic (score vs par)
+  const getMinutecrypticHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'minutecryptic');
+    const histogram = { '≤-2': 0, '-1': 0, '0': 0, '+1': 0, '+2': 0, '≥+3': 0 };
+
+    gameResults.forEach(r => {
+      const score = r.scoreValue || 0;
+      // Assuming par is typically around 2, so score-2 gives diff
+      // But since we just have score, we'll bucket by score directly
+      if (score <= 0) histogram['≤-2']++;
+      else if (score === 1) histogram['-1']++;
+      else if (score === 2) histogram['0']++;
+      else if (score === 3) histogram['+1']++;
+      else if (score === 4) histogram['+2']++;
+      else histogram['≥+3']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Daily Dozen (score out of 12)
+  const getDailydozenHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'dailydozen');
+    const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-11': 0, '12': 0 };
+
+    gameResults.forEach(r => {
+      const score = r.scoreValue || 0;
+      if (score === 12) histogram['12']++;
+      else if (score >= 10) histogram['10-11']++;
+      else if (score >= 7) histogram['7-9']++;
+      else if (score >= 4) histogram['4-6']++;
+      else histogram['0-3']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for More Or Less (streak ranges)
+  const getMoreorlessHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'moreorless');
+    const histogram = { '1-5': 0, '6-10': 0, '11-15': 0, '16-20': 0, '21+': 0 };
+
+    gameResults.forEach(r => {
+      const streak = r.scoreValue || 0;
+      if (streak >= 21) histogram['21+']++;
+      else if (streak >= 16) histogram['16-20']++;
+      else if (streak >= 11) histogram['11-15']++;
+      else if (streak >= 6) histogram['6-10']++;
+      else histogram['1-5']++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Eruptle (score out of 10)
+  const getEruptleHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'eruptle');
+    const histogram = {};
+    for (let i = 0; i <= 10; i++) histogram[i] = 0;
+
+    gameResults.forEach(r => {
+      const score = Math.min(10, Math.max(0, r.scoreValue || 0));
+      histogram[Math.round(score)]++;
+    });
+
+    return histogram;
+  }, [results]);
+
+  // Get histogram data for Thrice (points 0-15)
+  const getThriceHistogram = useCallback(() => {
+    const gameResults = results.filter(r => r.gameId === 'thrice');
+    const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0, '13-15': 0 };
+
+    gameResults.forEach(r => {
+      const points = r.scoreValue || 0;
+      if (points >= 13) histogram['13-15']++;
+      else if (points >= 10) histogram['10-12']++;
+      else if (points >= 7) histogram['7-9']++;
+      else if (points >= 4) histogram['4-6']++;
+      else histogram['0-3']++;
+    });
+
+    return histogram;
+  }, [results]);
+
   // Get all histogram data at once
   const getAllHistograms = useCallback(() => {
     return {
       wordle: getWordleHistogram(),
       connections: getConnectionsHistogram(),
+      strands: getStrandsHistogram(),
       mini: getMiniHistogram(),
+      latimesmini: getLatimesMiniHistogram(),
       bandle: getBandleHistogram(),
       catfishing: getCatfishingHistogram(),
       timeguessr: getTimeguessrHistogram(),
+      travle: getTravleHistogram(),
+      flagle: getFlagleHistogram(),
+      kindahardgolf: getKindahardgolfHistogram(),
+      enclosehorse: getEnclosehorseHistogram(),
+      kickoffleague: getKickoffleagueHistogram(),
+      scrandle: getScrandleHistogram(),
+      oneuppuzzle: getOneuppuzzleHistogram(),
+      cluesbysam: getCluesbysamHistogram(),
+      minutecryptic: getMinutecrypticHistogram(),
+      dailydozen: getDailydozenHistogram(),
+      moreorless: getMoreorlessHistogram(),
+      eruptle: getEruptleHistogram(),
+      thrice: getThriceHistogram(),
     };
-  }, [getWordleHistogram, getConnectionsHistogram, getMiniHistogram, getBandleHistogram, getCatfishingHistogram, getTimeguessrHistogram]);
+  }, [
+    getWordleHistogram, getConnectionsHistogram, getStrandsHistogram, getMiniHistogram,
+    getLatimesMiniHistogram, getBandleHistogram, getCatfishingHistogram, getTimeguessrHistogram,
+    getTravleHistogram, getFlagleHistogram, getKindahardgolfHistogram, getEnclosehorseHistogram,
+    getKickoffleagueHistogram, getScrandleHistogram, getOneuppuzzleHistogram, getCluesbysamHistogram,
+    getMinutecrypticHistogram, getDailydozenHistogram, getMoreorlessHistogram, getEruptleHistogram,
+    getThriceHistogram
+  ]);
 
   // Get all games that have at least one result (for showing histograms)
   const getGamesWithResults = useCallback(() => {

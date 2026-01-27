@@ -204,7 +204,6 @@ export function TimeguessrHistogram({ data }) {
   const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
   const colors = { '45-50k': 'perfect', '40-45k': 'perfect', '0-5k': 'failure', '5-10k': 'failure' };
 
-  // Shorter labels for display
   const formatLabel = (l) => {
     const match = l.match(/(\d+)-/);
     return match ? match[1] : l;
@@ -218,6 +217,264 @@ export function TimeguessrHistogram({ data }) {
       colors={colors}
       total={total}
       formatLabel={formatLabel}
+    />
+  );
+}
+
+// Strands Histogram: Hints used
+export function StrandsHistogram({ data }) {
+  const labels = ['0', '1', '2', '3', '4+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || data[parseInt(l)] || 0), 0);
+  const colors = { '0': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="Strands"
+      data={{ ...data, '0': data[0] || 0, '1': data[1] || 0, '2': data[2] || 0, '3': data[3] || 0 }}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// LA Times Mini Histogram: Time buckets (same as NYT Mini)
+export function LatimesMiniHistogram({ data }) {
+  const labels = ['<30s', '30-60s', '1-2m', '2-3m', '3m+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '<30s': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="LA Times Mini"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Travle Histogram: Extra guesses
+export function TravleHistogram({ data }) {
+  const labels = ['+0', '+1', '+2', '+3', '+4', '+5+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '+0': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="Travle"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Flagle Histogram: Guesses 1-6, X
+export function FlagleHistogram({ data }) {
+  const labels = ['1', '2', '3', '4', '5', '6', 'X'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || data[parseInt(l)] || 0), 0);
+  const colors = { 'X': 'failure' };
+
+  return (
+    <GameHistogram
+      title="Flagle"
+      data={{ ...data, '1': data[1] || 0, '2': data[2] || 0, '3': data[3] || 0, '4': data[4] || 0, '5': data[5] || 0, '6': data[6] || 0 }}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Kinda Hard Golf Histogram: Strokes
+export function KindahardgolfHistogram({ data }) {
+  const labels = ['1', '2', '3', '4', '5', '6+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || data[parseInt(l)] || 0), 0);
+  const colors = { '1': 'perfect', '2': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="Kinda Hard Golf"
+      data={{ ...data, '1': data[1] || 0, '2': data[2] || 0, '3': data[3] || 0, '4': data[4] || 0, '5': data[5] || 0 }}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// enclose.horse Histogram: Percentage buckets
+export function EnclosehorseHistogram({ data }) {
+  const labels = ['0-20', '21-40', '41-60', '61-80', '81-99', '100'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '100': 'perfect', '81-99': 'perfect', '0-20': 'failure' };
+
+  const formatLabel = (l) => l === '100' ? '100' : l.split('-')[0];
+
+  return (
+    <GameHistogram
+      title="enclose.horse"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+      formatLabel={formatLabel}
+    />
+  );
+}
+
+// Kickoff League Histogram: Kicks
+export function KickoffleagueHistogram({ data }) {
+  const labels = ['1', '2', '3', '4', '5', '6+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || data[parseInt(l)] || 0), 0);
+  const colors = { '1': 'perfect', '2': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="Kickoff League"
+      data={{ ...data, '1': data[1] || 0, '2': data[2] || 0, '3': data[3] || 0, '4': data[4] || 0, '5': data[5] || 0 }}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Scrandle Histogram: Score 0-10
+export function ScrandleHistogram({ data }) {
+  const labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  const total = labels.reduce((sum, l) => sum + (data[parseInt(l)] || 0), 0);
+  const colors = { '10': 'perfect', '9': 'perfect', '0': 'failure', '1': 'failure' };
+
+  return (
+    <GameHistogram
+      title="Scrandle"
+      data={Object.fromEntries(labels.map(l => [l, data[parseInt(l)] || 0]))}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// One Up Puzzle Histogram: Time buckets
+export function OneuppuzzleHistogram({ data }) {
+  const labels = ['<1m', '1-2m', '2-5m', '5-10m', '10m+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '<1m': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="One Up Puzzle"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Clues By Sam Histogram: Time buckets
+export function CluesbysamHistogram({ data }) {
+  const labels = ['<1m', '1-2m', '2-5m', '5-10m', '10m+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '<1m': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="Clues By Sam"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Minute Cryptic Histogram: Score relative to par
+export function MinutecrypticHistogram({ data }) {
+  const labels = ['≤-2', '-1', '0', '+1', '+2', '≥+3'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '≤-2': 'perfect', '-1': 'perfect', '0': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="Minute Cryptic"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Daily Dozen Histogram: Score ranges
+export function DailydozenHistogram({ data }) {
+  const labels = ['0-3', '4-6', '7-9', '10-11', '12'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '12': 'perfect', '10-11': 'perfect', '0-3': 'failure' };
+
+  return (
+    <GameHistogram
+      title="Daily Dozen"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// More Or Less Histogram: Streak ranges
+export function MoreorlessHistogram({ data }) {
+  const labels = ['1-5', '6-10', '11-15', '16-20', '21+'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '21+': 'perfect', '16-20': 'perfect' };
+
+  return (
+    <GameHistogram
+      title="More Or Less"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Eruptle Histogram: Score 0-10
+export function EruptleHistogram({ data }) {
+  const labels = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10'];
+  const total = labels.reduce((sum, l) => sum + (data[parseInt(l)] || 0), 0);
+  const colors = { '10': 'perfect', '9': 'perfect', '0': 'failure', '1': 'failure' };
+
+  return (
+    <GameHistogram
+      title="Eruptle"
+      data={Object.fromEntries(labels.map(l => [l, data[parseInt(l)] || 0]))}
+      labels={labels}
+      colors={colors}
+      total={total}
+    />
+  );
+}
+
+// Thrice Histogram: Points ranges
+export function ThriceHistogram({ data }) {
+  const labels = ['0-3', '4-6', '7-9', '10-12', '13-15'];
+  const total = labels.reduce((sum, l) => sum + (data[l] || 0), 0);
+  const colors = { '13-15': 'perfect', '10-12': 'perfect', '0-3': 'failure' };
+
+  return (
+    <GameHistogram
+      title="Thrice"
+      data={data}
+      labels={labels}
+      colors={colors}
+      total={total}
     />
   );
 }
