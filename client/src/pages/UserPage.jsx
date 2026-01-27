@@ -20,8 +20,15 @@ function UserPage() {
     removeResult,
     getAllHistograms,
     getGamesWithResults,
+    clearAll,
   } = useGameResults();
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleClearAll = () => {
+    if (window.confirm('Clear all stored results? This cannot be undone.')) {
+      clearAll();
+    }
+  };
 
   const handleAddResult = () => {
     setIsModalOpen(true);
@@ -84,6 +91,13 @@ function UserPage() {
               </div>
             )}
           </div>
+        </div>
+
+        {/* Debug section */}
+        <div className="user-page__debug">
+          <button className="user-page__debug-button" onClick={handleClearAll}>
+            Clear All Data (Debug)
+          </button>
         </div>
       </div>
 

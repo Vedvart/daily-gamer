@@ -69,3 +69,26 @@
     grid-template-columns: 1fr;
   }
 }
+
+.user-page__debug {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--input-border);
+}
+
+.user-page__debug-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.user-page__debug-button:hover {
+  background-color: var(--error);
+  color: white;
+  border-color: var(--error);
+}

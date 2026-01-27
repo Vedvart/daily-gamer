@@ -18,30 +18,45 @@ const connectionsParser = {
 
     const puzzleNumber = parseInt(headerMatch[1], 10);
 
-    // Extract emoji grid (lines with colored squares)
+    // Extract emoji grid - be more lenient with matching
+    // Match any line that contains the colored square emojis
     const lines = text.split('\n');
-    const gridLines = lines.filter(line => {
+    const gridLines = [];
+
+    for (const line of lines) {
       const trimmed = line.trim();
-      return trimmed.length > 0 && /^[🟨🟩🟦🟪\s]+$/.test(trimmed);
-    });
+      // Check if line contains any of the connection colors
+      if (trimmed.length > 0 && /[🟨🟩🟦🟪]/.test(trimmed)) {
+        gridLines.push(trimmed);
+      }
+    }
+
     const grid = gridLines.join('\n');
 
-    // Calculate mistakes from grid - perfect is 4 lines of same color
-    // Count how many "wrong" guesses (lines that aren't all same color)
+    // Calculate mistakes from grid
+    // A successful guess is a line with 4 squares of the same color
+    // A mistake is a line with mixed colors
     let mistakes = 0;
     const rowColors = []; // Track the color of each successful row
 
-    gridLines.forEach(line => {
-      const squares = line.trim().match(/[🟨🟩🟦🟪]/g) || [];
+    for (const line of gridLines) {
+      // Extract all colored squares from the line
+      const squares = line.match(/[🟨🟩🟦🟪]/gu) || [];
+
+      console.log('Connections parser - line:', line, 'squares:', squares.length, squares);
+
       if (squares.length === 4) {
-        const allSame = squares.every(s => s === squares[0]);
-        if (!allSame) {
-          mistakes++;
+        const firstColor = squares[0];
+        const allSame = squares.every(s => s === firstColor);
+        if (allSame) {
+          rowColors.push(firstColor);
         } else {
-          rowColors.push(squares[0]);
+          mistakes++;
         }
       }
-    });
+    }
+
+    console.log('Connections parser - rowColors:', rowColors, 'mistakes:', mistakes);
 
     // Game is won if all 4 categories were found (4 successful rows)
     const won = rowColors.length === 4;
@@ -61,6 +76,8 @@ const connectionsParser = {
         isPurpleFirst = true;
       }
     }
+
+    console.log('Connections parser - won:', won, 'isReversePerfect:', isReversePerfect, 'isPurpleFirst:', isPurpleFirst);
 
     let score;
     if (isReversePerfect) {
