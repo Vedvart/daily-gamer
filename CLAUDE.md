@@ -180,3 +180,45 @@ In Progress:
 3\. Migrate localStorage to database storage
 4\. Add historical stats and streak tracking
 
+---
+
+\## Session Notes (January 27, 2026)
+
+\### Recent Work Completed This Session:
+- Redesigned layout: Today's Results now full-width at top, Average Results below (single-column)
+- Added visual flair to ResultCard: gradient backgrounds, game-colored accent bars, shimmer animations for "great results", hover effects, sparkle celebrations
+- Compacted the result cards to take up less space (smaller icons, fonts, padding, tighter grid)
+- All changes pushed to Railway and deployed
+
+\### Current Task IN PROGRESS - Generate Scorecard Feature:
+User requested a "Generate Scorecard" button next to "Customize Page" that opens a modal with three format options:
+1. **Full Text** - Complete share text for all games back-to-back
+2. **Compact Text** - Abbreviated one-line summaries (e.g., "Wordle #1234: 4/6")
+3. **Image** - Visual scorecard using Canvas API
+
+Flow: Button → Options modal → Generate → Result popup with auto-copy to clipboard
+
+\### Files Created (COMPLETE):
+- `client/src/components/ScorecardModal.jsx` - Full component with all three generators
+- `client/src/components/ScorecardModal.css` - Complete styling
+
+\### Files Modified (COMPLETE):
+- `client/src/components/ProfileHeader.jsx` - Added `onGenerateScorecard` prop and button
+- `client/src/components/ProfileHeader.css` - Added `.profile-header__button--accent` style
+
+\### Files Modified (PARTIAL - NEED TO FINISH):
+- `client/src/pages/UserPage.jsx` - Added import and state, but STILL NEED TO:
+  1. Add the `<ScorecardModal>` component at the end of the JSX (after `<AddResultModal>`)
+  2. Pass props: `isOpen={isScorecardOpen}`, `onClose={() => setIsScorecardOpen(false)}`, `results={todayResults}`
+
+\### To Complete Next Session:
+1. Finish UserPage.jsx - add the ScorecardModal component to the JSX
+2. Test all three scorecard formats work correctly
+3. Commit and push to Railway
+4. Verify on live site
+
+\### Special Game Logic Notes:
+- Connections has special achievements: "Reverse Perfect" (purple→blue→green→yellow order) and "Purple First" (purple first but not full reverse)
+- Catfishing supports decimal scores (e.g., 3.5/10) - DO NOT round
+- "Great results" trigger celebrations: Wordle ≤3, Connections perfect/achievements, Mini ≤60s, Bandle ≤3, Catfishing ≥8, TimeGuessr ≥40K
+
