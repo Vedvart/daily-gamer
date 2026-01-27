@@ -24,18 +24,18 @@ function UserPage() {
   } = useGameResults();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleClearAll = () => {
-    if (window.confirm('Clear all stored results? This cannot be undone.')) {
-      clearAll();
-    }
-  };
-
   const handleAddResult = () => {
     setIsModalOpen(true);
   };
 
   const handleResultParsed = (result) => {
     addResult(result);
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm('Clear all stored results? This cannot be undone.')) {
+      clearAll();
+    }
   };
 
   const histograms = getAllHistograms();
@@ -52,14 +52,16 @@ function UserPage() {
         />
 
         <div className="user-page__content">
-          <div className="user-page__left">
+          {/* Today's Results - Full Width */}
+          <section>
             <TodayResults
               results={todayResults}
               onRemoveResult={removeResult}
             />
-          </div>
+          </section>
 
-          <div className="user-page__right">
+          {/* Average Results - Full Width Below */}
+          <section>
             <h2 className="user-page__section-title">Average Results</h2>
             {hasAnyHistogramData ? (
               <div className="user-page__histograms">
@@ -90,7 +92,7 @@ function UserPage() {
                 </p>
               </div>
             )}
-          </div>
+          </section>
         </div>
 
         {/* Debug section */}

@@ -11,11 +11,18 @@ function TodayResults({ results, onRemoveResult }) {
   if (results.length === 0) {
     return (
       <div className="today-results">
-        <h2 className="today-results__title">Today's Results</h2>
-        <p className="today-results__date">{today}</p>
+        <div className="today-results__header">
+          <h2 className="today-results__title">Today's Results</h2>
+          <span className="today-results__date">{today}</span>
+        </div>
         <div className="today-results__empty">
-          <p>No results yet today.</p>
-          <p className="today-results__empty-hint">Click "Add Result" to paste your game results.</p>
+          <div className="today-results__empty-icon">
+            <span>🎮</span>
+          </div>
+          <p className="today-results__empty-text">No games played yet today</p>
+          <p className="today-results__empty-hint">
+            Click "Add Result" to paste your game results
+          </p>
         </div>
       </div>
     );
@@ -23,15 +30,16 @@ function TodayResults({ results, onRemoveResult }) {
 
   return (
     <div className="today-results">
-      <h2 className="today-results__title">Today's Results</h2>
-      <p className="today-results__date">{today}</p>
-      <div className="today-results__list">
+      <div className="today-results__header">
+        <h2 className="today-results__title">Today's Results</h2>
+        <span className="today-results__date">{today}</span>
+      </div>
+      <div className="today-results__grid">
         {results.map(result => (
           <ResultCard
             key={result.id}
             result={result}
             onRemove={onRemoveResult}
-            compact
           />
         ))}
       </div>
