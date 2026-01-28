@@ -1,0 +1,17 @@
+.thread-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.thread-list__empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.thread-list__empty p {
+  margin: 0;
+}

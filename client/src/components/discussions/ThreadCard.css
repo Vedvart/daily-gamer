@@ -1,0 +1,74 @@
+.thread-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  width: 100%;
+}
+
+.thread-card:hover {
+  border-color: var(--accent-purple);
+  background: var(--input-bg);
+}
+
+.thread-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.thread-card__type {
+  font-size: 0.65rem;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.thread-card__type--daily {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--accent-blue);
+}
+
+.thread-card__type--general {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--accent-purple);
+}
+
+.thread-card__time {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+}
+
+.thread-card__title {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.thread-card__footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.thread-card__comments {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.thread-card__last {
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

@@ -28,6 +28,12 @@ function Header() {
         >
           Dashboard
         </Link>
+        <Link
+          to="/groups"
+          className={`nav-link ${location.pathname.startsWith('/group') ? 'active' : ''}`}
+        >
+          Groups
+        </Link>
       </nav>
     </header>
   );

@@ -1,0 +1,100 @@
+.layout-editor-modal {
+  background: var(--bg-card);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 450px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.layout-editor-content {
+  padding: 1.5rem;
+}
+
+.layout-editor-hint {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0 0 1rem 0;
+}
+
+.layout-editor-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.layout-editor-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  transition: opacity 0.15s ease;
+}
+
+.layout-editor-item.hidden {
+  opacity: 0.5;
+}
+
+.layout-editor-item__main {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.layout-editor-item__order {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--input-bg);
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.layout-editor-item__name {
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.layout-editor-item__actions {
+  display: flex;
+  gap: 0.35rem;
+}
+
+.layout-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  transition: all 0.15s ease;
+}
+
+.layout-btn:hover:not(:disabled) {
+  border-color: var(--accent-purple);
+  color: var(--text-primary);
+}
+
+.layout-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.layout-btn--visibility {
+  font-size: 1rem;
+}
+
+.layout-btn--visibility.visible {
+  color: var(--accent-green);
+}

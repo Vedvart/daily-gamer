@@ -1,0 +1,228 @@
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.create-group-modal {
+  background: var(--bg-card);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid var(--input-border);
+}
+
+.modal-header h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.modal-close:hover {
+  color: var(--text-primary);
+}
+
+.modal-form {
+  padding: 1.5rem;
+}
+
+.modal-error {
+  padding: 0.75rem;
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid var(--error);
+  border-radius: 6px;
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  margin-bottom: 1.25rem;
+}
+
+.form-group label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.form-group input[type="text"],
+.form-group textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+/* Radio Groups */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.radio-group--horizontal {
+  flex-direction: row;
+  gap: 1rem;
+}
+
+.radio-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.radio-option:hover {
+  background: var(--input-bg);
+}
+
+.radio-option--compact {
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+}
+
+.radio-option input[type="radio"] {
+  margin-top: 0.15rem;
+  accent-color: var(--accent-purple);
+}
+
+.radio-label {
+  display: flex;
+  flex-direction: column;
+}
+
+.radio-label strong {
+  font-size: 0.9375rem;
+}
+
+.radio-label small {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+/* Game Grid */
+.game-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.game-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.game-chip input {
+  display: none;
+}
+
+.game-chip:hover {
+  border-color: var(--accent-purple);
+}
+
+.game-chip.selected {
+  background: rgba(168, 85, 247, 0.15);
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+}
+
+/* Actions */
+.modal-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  padding-top: 1rem;
+  border-top: 1px solid var(--input-border);
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--accent-purple);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--input-border);
+}
+
+.btn-secondary:hover {
+  color: var(--text-primary);
+  border-color: var(--text-secondary);
+}

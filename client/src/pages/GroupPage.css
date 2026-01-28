@@ -1,0 +1,97 @@
+.group-page {
+  flex: 1;
+  padding: 2rem;
+  width: 100%;
+}
+
+.group-page__container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Content */
+.group-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Not Found / Private States */
+.group-page__not-found,
+.group-page__private {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+}
+
+.group-page__not-found h2,
+.group-page__private h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.group-page__not-found p,
+.group-page__private p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.group-page__back-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--accent-purple);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Preview (non-member view) */
+.group-page__preview {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.group-page__preview-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px dashed var(--accent-purple);
+}
+
+.group-page__preview-message h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.group-page__preview-message p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.group-page__join-btn {
+  padding: 0.75rem 1.5rem;
+  background: var(--accent-purple);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.group-page__join-btn:hover {
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .group-page {
+    padding: 1rem;
+  }
+}

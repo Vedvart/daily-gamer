@@ -1,0 +1,74 @@
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: var(--bg-card);
+  border-radius: 8px;
+  text-decoration: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: default;
+}
+
+.user-card--small {
+  padding: 0.5rem;
+  gap: 0.5rem;
+}
+
+.user-card--link,
+.user-card--button {
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.1s ease;
+}
+
+.user-card--link:hover,
+.user-card--button:hover {
+  background: var(--bg-secondary);
+}
+
+.user-card--link:active,
+.user-card--button:active {
+  transform: scale(0.99);
+}
+
+.user-card__info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.user-card__name {
+  color: var(--text-primary);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-card--small .user-card__name {
+  font-size: 0.875rem;
+}
+
+.user-card__username {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.user-card--small .user-card__username {
+  font-size: 0.75rem;
+}
+
+.user-card__subtitle {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.user-card__right {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}

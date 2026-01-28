@@ -1,0 +1,27 @@
+.daily-leaderboard {
+  /* Container */
+}
+
+.daily-leaderboard__date {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 1rem;
+}
+
+.daily-leaderboard__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.daily-leaderboard__empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.daily-leaderboard__empty p {
+  margin: 0;
+}

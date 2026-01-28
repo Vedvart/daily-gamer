@@ -1,0 +1,116 @@
+.game-selector-modal {
+  background: var(--bg-card);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 450px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.game-selector-content {
+  padding: 1.5rem;
+}
+
+.game-selector-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.action-btn {
+  padding: 0.4rem 0.75rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.action-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-purple);
+}
+
+.game-selector-hint {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0 0 1rem 0;
+}
+
+.game-selector-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.game-selector-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary);
+  border-radius: 6px;
+  opacity: 0.6;
+  transition: opacity 0.15s ease;
+}
+
+.game-selector-item.enabled {
+  opacity: 1;
+}
+
+.game-selector-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  flex: 1;
+}
+
+.game-selector-checkbox input {
+  accent-color: var(--accent-purple);
+}
+
+.game-name {
+  font-size: 0.9375rem;
+}
+
+.pin-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: var(--text-secondary);
+  transition: color 0.15s ease;
+}
+
+.pin-btn:hover:not(:disabled) {
+  color: var(--accent-yellow);
+}
+
+.pin-btn.pinned {
+  color: var(--accent-yellow);
+}
+
+.pin-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.game-selector-summary {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--input-border);
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}

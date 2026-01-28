@@ -1,0 +1,54 @@
+.comment-input {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.comment-input textarea {
+  width: 100%;
+  padding: 0.75rem;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 60px;
+}
+
+.comment-input textarea:focus {
+  outline: none;
+  border-color: var(--accent-purple);
+}
+
+.comment-input textarea::placeholder {
+  color: var(--text-secondary);
+}
+
+.comment-input textarea:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.comment-input__btn {
+  align-self: flex-end;
+  padding: 0.5rem 1rem;
+  background: var(--accent-purple);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.comment-input__btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.comment-input__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}

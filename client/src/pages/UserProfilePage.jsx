@@ -1,7 +1,11 @@
-import { useState } from 'react';
-import { useCurrentUser } from '../hooks/useCurrentUser';
+// UserProfilePage - View any user's profile
+// Displays a user's game results and statistics
+
+import { useParams, Link } from 'react-router-dom';
 import useGameResults from '../hooks/useGameResults';
-import ProfileHeader from '../components/ProfileHeader';
+import useUsers from '../hooks/useUsers';
+import { useCurrentUser } from '../hooks/useCurrentUser';
+import UserAvatar from '../components/user/UserAvatar';
 import TodayResults from '../components/TodayResults';
 import {
   WordleHistogram,
@@ -26,71 +30,90 @@ import {
   EruptleHistogram,
   ThriceHistogram,
 } from '../components/GameHistogram';
-import AddResultModal from '../components/AddResultModal';
-import ScorecardModal from '../components/ScorecardModal';
-import './UserPage.css';
+import './UserProfilePage.css';
 
-function UserPage() {
-  const { currentUserId, currentUser } = useCurrentUser();
+function UserProfilePage() {
+  const { userId } = useParams();
+  const { getUser } = useUsers();
+  const { currentUserId } = useCurrentUser();
 
-  // Load results for the current user
+  const user = getUser(userId);
+  const isOwnProfile = userId === currentUserId;
+
+  // Load this user's results (read-only if viewing another user)
   const {
     todayResults,
-    addResult,
-    removeResult,
     getAllHistograms,
     getGamesWithResults,
-    clearAll,
-  } = useGameResults(currentUserId);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isScorecardOpen, setIsScorecardOpen] = useState(false);
+  } = useGameResults(userId, !isOwnProfile);
 
-  const handleAddResult = () => {
-    setIsModalOpen(true);
-  };
-
-  const handleGenerateScorecard = () => {
-    setIsScorecardOpen(true);
-  };
-
-  const handleResultParsed = (result) => {
-    addResult(result);
-  };
-
-  const handleClearAll = () => {
-    if (window.confirm('Clear all stored results? This cannot be undone.')) {
-      clearAll();
-    }
-  };
+  // User not found
+  if (!user) {
+    return (
+      <main className="user-profile-page">
+        <div className="user-profile-page__container">
+          <div className="user-profile-page__not-found">
+            <h2>User Not Found</h2>
+            <p>The user you're looking for doesn't exist.</p>
+            <Link to="/dashboard" className="user-profile-page__back-link">
+              Go to Dashboard
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   const histograms = getAllHistograms();
   const gamesWithResults = getGamesWithResults();
   const hasAnyHistogramData = gamesWithResults.length > 0;
 
-  return (
-    <main className="user-page">
-      <div className="user-page__container">
-        <ProfileHeader
-          username={currentUser?.displayName || 'Player'}
-          isOwner={true}
-          onAddResult={handleAddResult}
-          onGenerateScorecard={handleGenerateScorecard}
-        />
+  // Format join date
+  const joinDate = new Date(user.createdAt).toLocaleDateString('en-US', {
+    month: 'long',
+    year: 'numeric'
+  });
 
-        <div className="user-page__content">
-          {/* Today's Results - Full Width */}
+  return (
+    <main className="user-profile-page">
+      <div className="user-profile-page__container">
+        {/* Profile Header */}
+        <div className="user-profile-page__header">
+          <UserAvatar user={user} size="xlarge" />
+          <div className="user-profile-page__info">
+            <h1 className="user-profile-page__name">{user.displayName}</h1>
+            <p className="user-profile-page__username">@{user.username}</p>
+            <p className="user-profile-page__joined">Member since {joinDate}</p>
+          </div>
+          {isOwnProfile && (
+            <Link to="/dashboard" className="user-profile-page__edit-link">
+              Go to Dashboard
+            </Link>
+          )}
+        </div>
+
+        <div className="user-profile-page__content">
+          {/* Today's Results */}
           <section>
-            <TodayResults
-              results={todayResults}
-              onRemoveResult={removeResult}
-            />
+            <h2 className="user-profile-page__section-title">Today's Results</h2>
+            {todayResults.length > 0 ? (
+              <TodayResults
+                results={todayResults}
+                onRemoveResult={() => {}} // Read-only for other users
+                readOnly={!isOwnProfile}
+              />
+            ) : (
+              <div className="user-profile-page__empty">
+                <p>No results for today yet.</p>
+              </div>
+            )}
           </section>
 
-          {/* Average Results - Full Width Below */}
+          {/* Historical Stats */}
           <section>
-            <h2 className="user-page__section-title">Average Results</h2>
+            <h2 className="user-profile-page__section-title">Statistics</h2>
             {hasAnyHistogramData ? (
-              <div className="user-page__histograms">
+              <div className="user-profile-page__histograms">
                 {gamesWithResults.includes('wordle') && (
                   <WordleHistogram data={histograms.wordle} />
                 )}
@@ -156,37 +179,15 @@ function UserPage() {
                 )}
               </div>
             ) : (
-              <div className="user-page__empty-histograms">
-                <p>No historical data yet.</p>
-                <p className="user-page__empty-hint">
-                  Add results to see your statistics over time.
-                </p>
+              <div className="user-profile-page__empty">
+                <p>No game history yet.</p>
               </div>
             )}
           </section>
         </div>
-
-        {/* Debug section */}
-        <div className="user-page__debug">
-          <button className="user-page__debug-button" onClick={handleClearAll}>
-            Clear All Data (Debug)
-          </button>
-        </div>
       </div>
-
-      <AddResultModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onResultParsed={handleResultParsed}
-      />
-
-      <ScorecardModal
-        isOpen={isScorecardOpen}
-        onClose={() => setIsScorecardOpen(false)}
-        results={todayResults}
-      />
     </main>
   );
 }
 
-export default UserPage;
+export default UserProfilePage;

@@ -1,0 +1,91 @@
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.user-avatar.clickable {
+  cursor: pointer;
+}
+
+.user-avatar.clickable:hover .avatar-circle {
+  transform: scale(1.05);
+  box-shadow: 0 0 0 2px var(--accent-purple);
+}
+
+.avatar-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  user-select: none;
+}
+
+/* Size variants */
+.avatar-small .avatar-circle {
+  width: 28px;
+  height: 28px;
+  font-size: 0.75rem;
+}
+
+.avatar-medium .avatar-circle {
+  width: 40px;
+  height: 40px;
+  font-size: 1rem;
+}
+
+.avatar-large .avatar-circle {
+  width: 56px;
+  height: 56px;
+  font-size: 1.25rem;
+}
+
+.avatar-xlarge .avatar-circle {
+  width: 80px;
+  height: 80px;
+  font-size: 1.75rem;
+}
+
+/* Content styles */
+.avatar-initials {
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.avatar-emoji {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.avatar-small .avatar-emoji {
+  font-size: 1rem;
+}
+
+.avatar-large .avatar-emoji {
+  font-size: 1.5rem;
+}
+
+.avatar-xlarge .avatar-emoji {
+  font-size: 2rem;
+}
+
+/* Name display */
+.avatar-name {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.avatar-small .avatar-name {
+  font-size: 0.875rem;
+}
+
+.avatar-medium .avatar-name {
+  font-size: 1rem;
+}
+
+.avatar-large .avatar-name {
+  font-size: 1.125rem;
+}

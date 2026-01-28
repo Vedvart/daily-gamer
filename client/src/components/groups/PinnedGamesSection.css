@@ -1,0 +1,103 @@
+.pinned-games-section {
+  /* Container */
+}
+
+.pinned-games-empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+}
+
+.pinned-games-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.pinned-game-card {
+  background: var(--bg-secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  border-left: 3px solid var(--accent-purple);
+}
+
+/* Game-specific colors */
+.pinned-game-card--wordle { border-left-color: var(--game-wordle); }
+.pinned-game-card--connections { border-left-color: var(--game-connections); }
+.pinned-game-card--strands { border-left-color: var(--game-strands); }
+.pinned-game-card--mini { border-left-color: var(--game-mini); }
+.pinned-game-card--latimesmini { border-left-color: var(--game-latimesmini); }
+.pinned-game-card--bandle { border-left-color: var(--game-bandle); }
+.pinned-game-card--catfishing { border-left-color: var(--game-catfishing); }
+.pinned-game-card--timeguessr { border-left-color: var(--game-timeguessr); }
+.pinned-game-card--travle { border-left-color: var(--game-travle); }
+.pinned-game-card--flagle { border-left-color: var(--game-flagle); }
+
+.pinned-game-card__title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.75rem 0;
+}
+
+.pinned-game-card__members {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.member-result {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem;
+  border-radius: 4px;
+}
+
+.member-result.has-result {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+.member-result.no-result {
+  opacity: 0.6;
+}
+
+.member-result__info {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  align-items: center;
+  min-width: 0;
+}
+
+.member-result__name {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.member-result__score {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--accent-green);
+}
+
+.member-result__pending {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.pinned-game-card__more {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  padding: 0.25rem;
+}
+
+.pinned-game-card__empty {
+  text-align: center;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  padding: 0.5rem;
+}

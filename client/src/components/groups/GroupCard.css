@@ -1,0 +1,112 @@
+.group-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.25rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  border: 1px solid var(--input-border);
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.1s ease;
+}
+
+.group-card:hover {
+  border-color: var(--accent-purple);
+  transform: translateY(-2px);
+}
+
+.group-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.group-card__name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 0;
+  flex: 1;
+}
+
+.group-card__badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.group-card__visibility {
+  font-size: 0.875rem;
+}
+
+.group-card__membership {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.group-card__membership--open {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--accent-green);
+}
+
+.group-card__membership--password {
+  background: rgba(234, 179, 8, 0.15);
+  color: var(--accent-yellow);
+}
+
+.group-card__membership--invite-only {
+  background: rgba(168, 85, 247, 0.15);
+  color: var(--accent-purple);
+}
+
+.group-card__description {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 1rem 0;
+  flex: 1;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.group-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--input-border);
+}
+
+.group-card__stats {
+  display: flex;
+  gap: 1rem;
+}
+
+.group-card__stat {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.stat-icon {
+  font-size: 0.9rem;
+}
+
+.group-card__member-badge {
+  font-size: 0.7rem;
+  padding: 0.2rem 0.5rem;
+  background: var(--accent-purple);
+  color: white;
+  border-radius: 4px;
+  font-weight: 500;
+}

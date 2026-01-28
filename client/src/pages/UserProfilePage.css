@@ -1,0 +1,143 @@
+.user-profile-page {
+  flex: 1;
+  padding: 2rem;
+  width: 100%;
+}
+
+.user-profile-page__container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Profile Header */
+.user-profile-page__header {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+  margin-bottom: 2rem;
+}
+
+.user-profile-page__info {
+  flex: 1;
+}
+
+.user-profile-page__name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  margin: 0 0 0.25rem 0;
+}
+
+.user-profile-page__username {
+  color: var(--text-secondary);
+  font-size: 1rem;
+  margin: 0 0 0.5rem 0;
+}
+
+.user-profile-page__joined {
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  margin: 0;
+  opacity: 0.8;
+}
+
+.user-profile-page__edit-link {
+  padding: 0.5rem 1rem;
+  background: var(--accent-purple);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: opacity 0.15s ease;
+}
+
+.user-profile-page__edit-link:hover {
+  opacity: 0.9;
+}
+
+/* Content */
+.user-profile-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.user-profile-page__section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.user-profile-page__histograms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+/* Empty States */
+.user-profile-page__empty {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  border: 1px dashed var(--input-border);
+}
+
+.user-profile-page__empty p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Not Found */
+.user-profile-page__not-found {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: var(--bg-card);
+  border-radius: 12px;
+}
+
+.user-profile-page__not-found h2 {
+  font-size: 1.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.user-profile-page__not-found p {
+  color: var(--text-secondary);
+  margin-bottom: 1.5rem;
+}
+
+.user-profile-page__back-link {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background: var(--accent-purple);
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+  .user-profile-page {
+    padding: 1rem;
+  }
+
+  .user-profile-page__header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .user-profile-page__info {
+    width: 100%;
+  }
+}
+
+@media (max-width: 500px) {
+  .user-profile-page__histograms {
+    grid-template-columns: 1fr;
+  }
+}

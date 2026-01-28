@@ -1,0 +1,21 @@
+.historical-leaderboard {
+  /* Container */
+}
+
+.historical-leaderboard__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.historical-leaderboard__empty {
+  text-align: center;
+  padding: 2rem;
+  color: var(--text-secondary);
+  background: var(--bg-secondary);
+  border-radius: 8px;
+}
+
+.historical-leaderboard__empty p {
+  margin: 0;
+}

@@ -1,0 +1,14 @@
+.join-group-modal {
+  background: var(--bg-card);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.join-modal__info {
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  margin: 0 0 1rem 0;
+}
+
+/* Uses shared styles from CreateGroupModal.css */

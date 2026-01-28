@@ -1,17 +1,33 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
-const STORAGE_KEY = 'dailygamer_results';
+// Get storage key for a user's results
+function getStorageKey(userId) {
+  if (userId) {
+    return `dailygamer_results_${userId}`;
+  }
+  return 'dailygamer_results';
+}
 
 /**
  * Custom hook for managing game results with localStorage persistence
+ * @param {string} userId - Optional user ID. If provided, loads that user's results.
+ * @param {boolean} readOnly - If true, results cannot be modified (for viewing other users)
  */
-function useGameResults() {
+function useGameResults(userId = null, readOnly = false) {
   const [results, setResults] = useState([]);
+  const storageKey = getStorageKey(userId);
+  const prevStorageKey = useRef(storageKey);
 
-  // Load results from localStorage on mount
+  // Load results from localStorage on mount or when userId changes
   useEffect(() => {
+    // Reset results when switching users
+    if (prevStorageKey.current !== storageKey) {
+      setResults([]);
+      prevStorageKey.current = storageKey;
+    }
+
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
         const parsed = JSON.parse(stored);
         setResults(parsed.results || []);
@@ -19,16 +35,19 @@ function useGameResults() {
     } catch (e) {
       console.error('Failed to load results from localStorage:', e);
     }
-  }, []);
+  }, [storageKey]);
 
   // Save results to localStorage whenever they change
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ results }));
-    } catch (e) {
-      console.error('Failed to save results to localStorage:', e);
+    // Only save if not in read-only mode
+    if (!readOnly && results.length > 0) {
+      try {
+        localStorage.setItem(storageKey, JSON.stringify({ results }));
+      } catch (e) {
+        console.error('Failed to save results to localStorage:', e);
+      }
     }
-  }, [results]);
+  }, [results, storageKey, readOnly]);
 
   // Get today's date in YYYY-MM-DD format
   const getToday = useCallback(() => {
@@ -40,6 +59,12 @@ function useGameResults() {
 
   // Add a new result (prevents duplicates based on gameId + puzzleNumber)
   const addResult = useCallback((result) => {
+    // Don't allow adding results in read-only mode
+    if (readOnly) {
+      console.warn('Cannot add results in read-only mode');
+      return;
+    }
+
     setResults(prev => {
       // Check for duplicate
       const existingIndex = prev.findIndex(
@@ -56,12 +81,16 @@ function useGameResults() {
       // Add new result
       return [...prev, result];
     });
-  }, []);
+  }, [readOnly]);
 
   // Remove a result by ID
   const removeResult = useCallback((id) => {
+    if (readOnly) {
+      console.warn('Cannot remove results in read-only mode');
+      return;
+    }
     setResults(prev => prev.filter(r => r.id !== id));
-  }, []);
+  }, [readOnly]);
 
   // Get stats for a specific game
   const getStats = useCallback((gameId) => {
@@ -557,8 +586,8 @@ function useGameResults() {
   // Clear all results (for testing/reset)
   const clearAll = useCallback(() => {
     setResults([]);
-    localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
 
   return {
     results,
