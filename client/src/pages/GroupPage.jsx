@@ -20,7 +20,7 @@ function GroupPage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { currentUserId } = useCurrentUser();
-  const { getGroup, verifyPassword, verifyInviteCode } = useGroups();
+  const { getGroupSync, verifyPassword, verifyInviteCode, isLoading: groupsLoading } = useGroups();
   const {
     members,
     isMember,
@@ -28,17 +28,31 @@ function GroupPage() {
     isModerator,
     joinGroup,
     leaveGroup,
-    isLoading,
+    isLoading: membersLoading,
     useApi
   } = useGroupMembership(groupId);
 
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [joinError, setJoinError] = useState('');
 
-  const group = getGroup(groupId);
+  // Use sync version to avoid Promise in render path
+  const group = getGroupSync(groupId);
   const userIsMember = isMember(currentUserId);
   const userIsAdmin = isAdmin(currentUserId);
   const userIsModerator = isModerator(currentUserId);
+
+  // Show loading state while data is being fetched
+  if (groupsLoading) {
+    return (
+      <main className="group-page">
+        <div className="group-page__container">
+          <div className="group-page__loading">
+            <p>Loading group...</p>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   // Group not found
   if (!group) {
@@ -58,7 +72,7 @@ function GroupPage() {
   }
 
   // Private group - only show to members
-  if (group.visibility === 'private' && !userIsMember && !isLoading) {
+  if (group.visibility === 'private' && !userIsMember && !membersLoading) {
     return (
       <main className="group-page">
         <div className="group-page__container">

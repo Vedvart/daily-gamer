@@ -16,14 +16,15 @@ function GroupSettingsPage() {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { currentUserId } = useCurrentUser();
-  const { getGroup, updateGroup, deleteGroup } = useGroups();
+  const { getGroupSync, updateGroup, deleteGroup } = useGroups();
   const { isAdmin, members } = useGroupMembership(groupId);
 
   const [showLayoutEditor, setShowLayoutEditor] = useState(false);
   const [showGameSelector, setShowGameSelector] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
 
-  const group = getGroup(groupId);
+  // Use sync version to avoid Promise in render path
+  const group = getGroupSync(groupId);
   const userIsAdmin = isAdmin(currentUserId);
 
   // Form state

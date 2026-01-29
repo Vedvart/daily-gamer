@@ -44,6 +44,13 @@
   gap: 2rem;
 }
 
+/* Loading State */
+.group-page__loading {
+  text-align: center;
+  padding: 4rem 2rem;
+  color: var(--text-secondary);
+}
+
 /* Not Found / Private States */
 .group-page__not-found,
 .group-page__private {
