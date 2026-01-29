@@ -13,7 +13,7 @@ Daily Gamer is a central hub for people who play daily games (Wordle, NYT Connec
 
 ## Future Features (Later Phases)
 
-- Friend connections and group leaderboards
+- Real user authentication (currently using demo users)
 - Public/unlisted/private profile privacy controls
 - Shareable result cards (images or formatted text)
 - Game "playlists" with optional timers for speedruns
@@ -86,8 +86,13 @@ daily-gamer/
 │   │   ├── App.css         # App container styles
 │   │   ├── main.jsx        # React entry point
 │   │   ├── index.css       # Global styles (CSS variables for dark theme)
+│   │   ├── data/           # Dummy data for demo system
+│   │   │   ├── dummyUsers.js       # 20 demo user profiles
+│   │   │   ├── dummyResults.js     # Generated results for demo users
+│   │   │   ├── dummyGroups.js      # Sample groups with memberships
+│   │   │   └── seedData.js         # Initialize localStorage with demo data
 │   │   ├── components/     # Reusable UI components
-│   │   │   ├── Header.jsx/css      # Navigation header
+│   │   │   ├── Header.jsx/css      # Navigation header with user dropdown
 │   │   │   ├── Footer.jsx/css      # Site footer
 │   │   │   ├── ResultInput.jsx/css # Paste input for game results
 │   │   │   ├── ResultCard.jsx/css  # Displays a single game result
@@ -95,35 +100,54 @@ daily-gamer/
 │   │   │   ├── GameHistogram.jsx/css # Histogram components for all games
 │   │   │   ├── AddResultModal.jsx/css # Modal for adding results
 │   │   │   ├── ScorecardModal.jsx/css # Modal for generating scorecards
-│   │   │   └── ProfileHeader.jsx/css  # Profile header with action buttons
+│   │   │   ├── ProfileHeader.jsx/css  # Profile header with action buttons
+│   │   │   ├── user/               # User-related components
+│   │   │   │   ├── UserAvatar.jsx/css  # Avatar display (initials/emoji/color)
+│   │   │   │   └── UserCard.jsx/css    # Compact user display
+│   │   │   ├── groups/             # Group-related components
+│   │   │   │   ├── GroupCard.jsx/css       # Group listing card
+│   │   │   │   ├── GroupHeader.jsx/css     # Group page header
+│   │   │   │   ├── GroupMemberList.jsx/css # Members section
+│   │   │   │   ├── GroupSection.jsx/css    # Section wrapper
+│   │   │   │   └── PinnedGamesSection.jsx/css # Featured games display
+│   │   │   ├── leaderboards/       # Leaderboard components
+│   │   │   │   ├── DailyLeaderboard.jsx/css      # Today's rankings
+│   │   │   │   ├── HistoricalLeaderboard.jsx/css # All-time rankings
+│   │   │   │   ├── LeaderboardRow.jsx/css        # Single ranking row
+│   │   │   │   ├── LeaderboardGameSelector.jsx/css # Game filter
+│   │   │   │   └── RankBadge.jsx/css             # Medal display
+│   │   │   ├── discussions/        # Discussion components
+│   │   │   │   ├── DiscussionSection.jsx/css # Container
+│   │   │   │   ├── ThreadList.jsx/css        # Thread listing
+│   │   │   │   ├── ThreadCard.jsx/css        # Thread preview
+│   │   │   │   ├── ThreadView.jsx/css        # Full thread view
+│   │   │   │   ├── CommentItem.jsx/css       # Single comment
+│   │   │   │   └── CommentInput.jsx/css      # Comment form
+│   │   │   └── modals/             # Modal dialogs
+│   │   │       ├── CreateGroupModal.jsx/css  # Create group form
+│   │   │       ├── JoinGroupModal.jsx/css    # Password/invite entry
+│   │   │       ├── InviteModal.jsx/css       # Invite users
+│   │   │       ├── LayoutEditorModal.jsx/css # Drag-drop sections
+│   │   │       └── GameSelectorModal.jsx/css # Enable/disable games
 │   │   ├── pages/          # Page components
-│   │   │   ├── HomePage.jsx/css    # Landing page
-│   │   │   └── UserPage.jsx/css    # Dashboard for scores
+│   │   │   ├── HomePage.jsx/css        # Landing page
+│   │   │   ├── UserPage.jsx/css        # Dashboard for scores
+│   │   │   ├── UserProfilePage.jsx/css # View any user's profile
+│   │   │   ├── GroupsListPage.jsx/css  # Browse/search groups
+│   │   │   ├── GroupPage.jsx/css       # Main group view
+│   │   │   └── GroupSettingsPage.jsx/css # Admin settings
 │   │   ├── parsers/        # Game result parsers (21 total)
-│   │   │   ├── index.js            # Parser registry
-│   │   │   ├── wordleParser.js
-│   │   │   ├── connectionsParser.js
-│   │   │   ├── strandsParser.js
-│   │   │   ├── miniParser.js
-│   │   │   ├── latimesMiniParser.js
-│   │   │   ├── bandleParser.js
-│   │   │   ├── catfishingParser.js
-│   │   │   ├── timeguessrParser.js
-│   │   │   ├── travleParser.js
-│   │   │   ├── flagleParser.js
-│   │   │   ├── kindahardgolfParser.js
-│   │   │   ├── enclosehorseParser.js
-│   │   │   ├── kickoffleagueParser.js
-│   │   │   ├── scrandleParser.js
-│   │   │   ├── oneuppuzzleParser.js
-│   │   │   ├── cluesbysamParser.js
-│   │   │   ├── minutecrypticParser.js
-│   │   │   ├── dailydozenParser.js
-│   │   │   ├── moreorlessParser.js
-│   │   │   ├── eruptleParser.js
-│   │   │   └── thriceParser.js
-│   │   └── hooks/          # Custom React hooks
-│   │       └── useGameResults.js   # localStorage state management + histograms
+│   │   │   └── ... (21 parser files)
+│   │   ├── hooks/          # Custom React hooks
+│   │   │   ├── useGameResults.js     # Results management + histograms
+│   │   │   ├── useUsers.js           # User management (list, get)
+│   │   │   ├── useCurrentUser.jsx    # Current user context
+│   │   │   ├── useGroups.js          # Group CRUD operations
+│   │   │   ├── useGroupMembership.js # Join/leave/invite/kick
+│   │   │   ├── useGroupLeaderboard.js # Rankings computation
+│   │   │   └── useDiscussions.js     # Thread/comment CRUD
+│   │   └── utils/
+│   │       └── leaderboardCalculations.js # Scoring logic per game
 │   ├── public/favicon.svg
 │   ├── index.html
 │   └── vite.config.js      # Vite config with API proxy
@@ -144,20 +168,23 @@ npm run build        # Build client for production
 
 ## Current Status
 
-**Phase 1 MVP - In Progress**
+**Phase 1 MVP - Complete (localStorage version)**
 
 Completed:
 - [x] Project structure (React frontend, Express backend)
 - [x] Hello World landing page with dark mode styling
 - [x] Railway deployment pipeline working
 - [x] API health check endpoint (/api/health)
-- [x] React Router setup (/ and /dashboard routes)
+- [x] React Router setup (/, /dashboard, /user/:userId, /groups, /group/:groupId, /group/:groupId/settings)
 - [x] Result parsing engine (modular plugin system for 21 games)
 - [x] User dashboard page with result input
 - [x] Today's results display grid with visual flair
 - [x] localStorage persistence for results
 - [x] Average Results histograms for all 21 games
 - [x] Generate Scorecard feature (Full Text, Compact Text, Image)
+- [x] Groups feature with leaderboards, discussions, and customizable layouts
+- [x] Demo user system (20 users with generated results for testing)
+- [x] User profile pages (/user/:userId)
 
 In Progress:
 - [ ] Add PostgreSQL database to Railway
@@ -214,3 +241,44 @@ All formats auto-copy to clipboard when generated.
 | More Or Less | Streak ranges (1-5 to 21+) |
 | Eruptle | Score (0-10) |
 | Thrice | Points ranges (0-15) |
+
+## Groups Feature
+
+The Groups feature allows users to create and join groups to compete on leaderboards and discuss daily games.
+
+### Group Settings
+
+- **Visibility**: public (browsable), unlisted (link only), private (invite only)
+- **Membership**: open (anyone joins), password-protected, invite-only
+- **Customizable Layout**: Admins can reorder/hide sections (pinned games, daily leaderboard, historical leaderboard, discussions, members)
+- **Game Selection**: Choose which games are tracked for leaderboards
+
+### Leaderboard Scoring
+
+| Game | Ranking Logic | Best Score |
+|------|--------------|------------|
+| Wordle/Bandle/Flagle | Fewer guesses, X=7 | 1 |
+| Connections | RP > PF > 0-3 mistakes > X | Reverse Perfect |
+| NYT Mini/LA Mini | Faster time | Lowest |
+| Catfishing/Scrandle/Eruptle | Higher score | 10 |
+| TimeGuessr | Higher score | 50000 |
+| Travle | Fewer extra guesses | +0 |
+| Daily Dozen | Higher score | 12 |
+| More Or Less | Higher streak | Highest |
+| Thrice | Higher points | 15 |
+
+### Demo User System
+
+20 demo users with generated historical results (7-30 days each). User switching is available via the header dropdown menu. Data is stored in localStorage with keys:
+- `dailygamer_users` - User profiles
+- `dailygamer_results_{userId}` - Results per user
+- `dailygamer_current_user` - Current session
+- `dailygamer_groups` - Group definitions
+- `dailygamer_group_members_{groupId}` - Membership data
+- `dailygamer_discussions_{groupId}` - Discussion threads
+
+### Navigation
+
+- Header includes user dropdown with profile link and user switching
+- Breadcrumb navigation on group and profile pages
+- Pages use `key={id}` prop to force remount when route params change (prevents stale UI)
