@@ -191,7 +191,7 @@ function GroupPage() {
   };
 
   return (
-    <main className="group-page">
+    <main className="group-page" key={groupId}>
       <div className="group-page__container">
         {/* Breadcrumb */}
         <nav className="group-page__breadcrumb">

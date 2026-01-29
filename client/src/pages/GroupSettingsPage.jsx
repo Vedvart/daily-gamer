@@ -129,7 +129,7 @@ function GroupSettingsPage() {
   };
 
   return (
-    <main className="group-settings-page">
+    <main className="group-settings-page" key={groupId}>
       <div className="group-settings-page__container">
         <header className="group-settings-page__header">
           <Link to={`/group/${groupId}`} className="back-link">

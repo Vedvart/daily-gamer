@@ -85,7 +85,7 @@ function UserProfilePage() {
   });
 
   return (
-    <main className="user-profile-page">
+    <main className="user-profile-page" key={userId}>
       <div className="user-profile-page__container">
         {/* Breadcrumb */}
         <nav className="user-profile-page__breadcrumb">
