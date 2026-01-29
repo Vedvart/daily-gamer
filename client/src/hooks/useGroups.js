@@ -227,7 +227,7 @@ function useGroups() {
     localStorage.removeItem(`dailygamer_discussions_${groupId}`);
   }, [useApi]);
 
-  // Get groups for a specific user (where they are a member)
+  // Get groups for a specific user (where they are a member) - async version
   const getGroupsForUser = useCallback(async (userId) => {
     // Try API first
     if (useApi) {
@@ -248,6 +248,37 @@ function useGroups() {
         const { members } = JSON.parse(memberData);
         if (members.some(m => m.userId === userId)) {
           userGroups.push(group);
+        }
+      }
+    }
+    return userGroups;
+  }, [groups, useApi]);
+
+  // Get groups for a specific user - sync version for rendering
+  // Note: In API mode, this filters from cached groups state
+  const getGroupsForUserSync = useCallback((userId) => {
+    // In API mode, we can't check membership synchronously
+    // But groups from API include memberCount, and we load user's groups on the groups list
+    // For now, return empty in API mode (the page should use async version or load separately)
+    if (useApi) {
+      // Filter groups where the user might be a member based on cached data
+      // This is a limitation - we'd need to track membership separately
+      return [];
+    }
+
+    // Local fallback - check membership in localStorage
+    const userGroups = [];
+    for (const group of groups) {
+      const memberKey = `dailygamer_group_members_${group.id}`;
+      const memberData = localStorage.getItem(memberKey);
+      if (memberData) {
+        try {
+          const { members } = JSON.parse(memberData);
+          if (members.some(m => m.userId === userId)) {
+            userGroups.push(group);
+          }
+        } catch (e) {
+          // Ignore parse errors
         }
       }
     }
@@ -314,6 +345,7 @@ function useGroups() {
     updateGroup,
     deleteGroup,
     getGroupsForUser,
+    getGroupsForUserSync,
     verifyPassword,
     verifyInviteCode,
     refreshGroups

@@ -1,7 +1,7 @@
 // GroupsListPage - Browse and search groups
 // Main page for discovering and joining groups
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import useGroups from '../hooks/useGroups';
 import GroupCard from '../components/groups/GroupCard';
@@ -10,11 +10,40 @@ import './GroupsListPage.css';
 
 function GroupsListPage() {
   const { currentUserId } = useCurrentUser();
-  const { groups, getPublicGroups, getGroupsForUser, createGroup } = useGroups();
+  const { groups, isLoading, getPublicGroups, getGroupsForUser, getGroupsForUserSync, createGroup, useApi } = useGroups();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all'); // 'all', 'my-groups', 'public'
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [myGroups, setMyGroups] = useState([]);
+  const [myGroupsLoading, setMyGroupsLoading] = useState(true);
+
+  // Load user's groups (async for API mode)
+  useEffect(() => {
+    async function loadMyGroups() {
+      if (!currentUserId) {
+        setMyGroups([]);
+        setMyGroupsLoading(false);
+        return;
+      }
+
+      setMyGroupsLoading(true);
+      try {
+        if (useApi) {
+          const userGroups = await getGroupsForUser(currentUserId);
+          setMyGroups(userGroups || []);
+        } else {
+          setMyGroups(getGroupsForUserSync(currentUserId));
+        }
+      } catch (e) {
+        console.error('Failed to load user groups:', e);
+        setMyGroups([]);
+      }
+      setMyGroupsLoading(false);
+    }
+
+    loadMyGroups();
+  }, [currentUserId, useApi, getGroupsForUser, getGroupsForUserSync, groups]);
 
   // Filter and search groups
   const filteredGroups = useMemo(() => {
@@ -22,13 +51,12 @@ function GroupsListPage() {
 
     // Apply filter
     if (filter === 'my-groups') {
-      result = getGroupsForUser(currentUserId);
+      result = myGroups;
     } else if (filter === 'public') {
       result = getPublicGroups();
     } else {
       // 'all' - show public groups and groups user is member of
       const publicGroups = getPublicGroups();
-      const myGroups = getGroupsForUser(currentUserId);
       const myGroupIds = new Set(myGroups.map(g => g.id));
 
       // Combine without duplicates
@@ -39,18 +67,18 @@ function GroupsListPage() {
     }
 
     // Apply search
-    if (searchQuery) {
+    if (searchQuery && result) {
       const query = searchQuery.toLowerCase();
       result = result.filter(g =>
         g.name.toLowerCase().includes(query) ||
-        g.description.toLowerCase().includes(query)
+        (g.description || '').toLowerCase().includes(query)
       );
     }
 
-    return result;
-  }, [groups, filter, searchQuery, currentUserId, getPublicGroups, getGroupsForUser]);
+    return result || [];
+  }, [groups, filter, searchQuery, myGroups, getPublicGroups]);
 
-  const myGroupsCount = getGroupsForUser(currentUserId).length;
+  const myGroupsCount = myGroups.length;
 
   const handleCreateGroup = (groupData) => {
     createGroup({
@@ -110,7 +138,11 @@ function GroupsListPage() {
         </div>
 
         <div className="groups-list-page__content">
-          {filteredGroups.length > 0 ? (
+          {isLoading || myGroupsLoading ? (
+            <div className="groups-list-page__empty">
+              <p>Loading groups...</p>
+            </div>
+          ) : filteredGroups.length > 0 ? (
             <div className="groups-list-page__grid">
               {filteredGroups.map(group => (
                 <GroupCard
