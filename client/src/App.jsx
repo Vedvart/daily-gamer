@@ -8,7 +8,6 @@ import UserProfilePage from './pages/UserProfilePage';
 import GroupsListPage from './pages/GroupsListPage';
 import GroupPage from './pages/GroupPage';
 import GroupSettingsPage from './pages/GroupSettingsPage';
-import UserSwitcher from './components/user/UserSwitcher';
 import './App.css';
 
 function App() {
@@ -26,7 +25,6 @@ function App() {
             <Route path="/group/:groupId/settings" element={<GroupSettingsPage />} />
           </Routes>
           <Footer />
-          <UserSwitcher />
         </div>
       </BrowserRouter>
     </CurrentUserProvider>

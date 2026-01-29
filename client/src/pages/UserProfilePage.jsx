@@ -1,7 +1,7 @@
 // UserProfilePage - View any user's profile
 // Displays a user's game results and statistics
 
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import useGameResults from '../hooks/useGameResults';
 import useUsers from '../hooks/useUsers';
 import { useCurrentUser } from '../hooks/useCurrentUser';
@@ -34,11 +34,21 @@ import './UserProfilePage.css';
 
 function UserProfilePage() {
   const { userId } = useParams();
+  const navigate = useNavigate();
   const { getUser } = useUsers();
   const { currentUserId } = useCurrentUser();
 
   const user = getUser(userId);
   const isOwnProfile = userId === currentUserId;
+
+  const handleBack = () => {
+    // Go back if there's history, otherwise go to groups
+    if (window.history.length > 2) {
+      navigate(-1);
+    } else {
+      navigate('/groups');
+    }
+  };
 
   // Load this user's results (read-only if viewing another user)
   const {
@@ -77,6 +87,15 @@ function UserProfilePage() {
   return (
     <main className="user-profile-page">
       <div className="user-profile-page__container">
+        {/* Breadcrumb */}
+        <nav className="user-profile-page__breadcrumb">
+          <button onClick={handleBack} className="user-profile-page__back-btn">
+            ← Back
+          </button>
+          <span className="breadcrumb-separator">/</span>
+          <span className="breadcrumb-current">{user.displayName}'s Profile</span>
+        </nav>
+
         {/* Profile Header */}
         <div className="user-profile-page__header">
           <UserAvatar user={user} size="xlarge" />

@@ -9,6 +9,38 @@
   margin: 0 auto;
 }
 
+/* Breadcrumb */
+.user-profile-page__breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.user-profile-page__back-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.user-profile-page__back-btn:hover {
+  color: var(--accent-purple);
+}
+
+.user-profile-page__breadcrumb .breadcrumb-separator {
+  color: var(--text-secondary);
+  opacity: 0.5;
+}
+
+.user-profile-page__breadcrumb .breadcrumb-current {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
 /* Profile Header */
 .user-profile-page__header {
   display: flex;

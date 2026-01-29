@@ -193,6 +193,13 @@ function GroupPage() {
   return (
     <main className="group-page">
       <div className="group-page__container">
+        {/* Breadcrumb */}
+        <nav className="group-page__breadcrumb">
+          <Link to="/groups">Groups</Link>
+          <span className="breadcrumb-separator">/</span>
+          <span className="breadcrumb-current">{group.name}</span>
+        </nav>
+
         <GroupHeader
           group={group}
           memberCount={members.length}
