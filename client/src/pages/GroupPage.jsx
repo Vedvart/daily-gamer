@@ -124,10 +124,29 @@ function GroupPage() {
     }
   };
 
-  // Get visible sections sorted by order
-  const visibleSections = (group.layout?.sections || [])
-    .filter(s => s.visible)
-    .sort((a, b) => a.order - b.order);
+  // Get enabled games - handle both API format (trackedGames) and localStorage format (layout.enabledGames)
+  const enabledGames = group.trackedGames || group.layout?.enabledGames || ['wordle', 'connections'];
+
+  // Get pinned games - handle both API format and localStorage format
+  const pinnedGames = group.pinnedGames || group.layout?.pinnedGames || enabledGames.slice(0, 2);
+
+  // Default sections if none configured
+  const defaultSections = [
+    { type: 'pinned-games', visible: true, order: 0 },
+    { type: 'daily-leaderboard', visible: true, order: 1 },
+    { type: 'historical-leaderboard', visible: true, order: 2 },
+    { type: 'discussions', visible: true, order: 3 },
+    { type: 'members', visible: true, order: 4 },
+  ];
+
+  // Get visible sections sorted by order - use defaults if none configured
+  const configuredSections = group.layoutConfig?.length > 0
+    ? group.layoutConfig
+    : (group.layout?.sections || []);
+
+  const visibleSections = (configuredSections.length > 0 ? configuredSections : defaultSections)
+    .filter(s => s.visible !== false)
+    .sort((a, b) => (a.order || 0) - (b.order || 0));
 
   // Render a section based on type
   const renderSection = (section) => {
@@ -137,8 +156,9 @@ function GroupPage() {
           <GroupSection key={section.type} title="Featured Games">
             <PinnedGamesSection
               groupId={groupId}
-              pinnedGames={group.layout?.pinnedGames || []}
+              pinnedGames={pinnedGames}
               members={members}
+              useApi={useApi}
             />
           </GroupSection>
         );
@@ -148,7 +168,7 @@ function GroupPage() {
           <GroupSection key={section.type} title="Today's Leaderboard">
             <DailyLeaderboard
               groupId={groupId}
-              enabledGames={group.layout?.enabledGames || []}
+              enabledGames={enabledGames}
               members={members}
               useApi={useApi}
             />
@@ -160,7 +180,7 @@ function GroupPage() {
           <GroupSection key={section.type} title="All-Time Leaderboard">
             <HistoricalLeaderboard
               groupId={groupId}
-              enabledGames={group.layout?.enabledGames || []}
+              enabledGames={enabledGames}
               members={members}
               useApi={useApi}
             />

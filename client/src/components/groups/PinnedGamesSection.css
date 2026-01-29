@@ -2,7 +2,8 @@
   /* Container */
 }
 
-.pinned-games-empty {
+.pinned-games-empty,
+.pinned-games-loading {
   text-align: center;
   padding: 2rem;
   color: var(--text-secondary);
@@ -10,7 +11,7 @@
 
 .pinned-games-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1rem;
 }
 
@@ -33,10 +34,32 @@
 .pinned-game-card--travle { border-left-color: var(--game-travle); }
 .pinned-game-card--flagle { border-left-color: var(--game-flagle); }
 
+.pinned-game-card__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.pinned-game-card__icon {
+  font-size: 1.25rem;
+}
+
 .pinned-game-card__title {
   font-size: 1rem;
   font-weight: 600;
-  margin: 0 0 0.75rem 0;
+  margin: 0;
+  flex: 1;
+}
+
+.pinned-game-card__count {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  background: var(--bg-tertiary);
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
 }
 
 .pinned-game-card__members {
@@ -49,16 +72,25 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem;
+  padding: 0.4rem 0.5rem;
   border-radius: 4px;
+  transition: background 0.15s;
 }
 
 .member-result.has-result {
   background: rgba(34, 197, 94, 0.1);
 }
 
+.member-result.is-great {
+  background: rgba(34, 197, 94, 0.2);
+}
+
+.member-result.is-failed {
+  background: rgba(239, 68, 68, 0.1);
+}
+
 .member-result.no-result {
-  opacity: 0.6;
+  opacity: 0.5;
 }
 
 .member-result__info {
@@ -78,13 +110,21 @@
 }
 
 .member-result__score {
-  font-size: 0.8125rem;
+  font-size: 0.875rem;
   font-weight: 600;
+  color: var(--text-primary);
+}
+
+.member-result__score.great {
   color: var(--accent-green);
 }
 
+.member-result__score.failed {
+  color: var(--accent-red);
+}
+
 .member-result__pending {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   color: var(--text-secondary);
 }
 
@@ -92,12 +132,15 @@
   text-align: center;
   font-size: 0.8125rem;
   color: var(--text-secondary);
-  padding: 0.25rem;
+  padding: 0.5rem;
+  background: var(--bg-tertiary);
+  border-radius: 4px;
+  margin-top: 0.25rem;
 }
 
 .pinned-game-card__empty {
   text-align: center;
   font-size: 0.8125rem;
   color: var(--text-secondary);
-  padding: 0.5rem;
+  padding: 1rem;
 }
