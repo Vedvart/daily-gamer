@@ -39,10 +39,11 @@ function GroupSettingsPage() {
   useEffect(() => {
     if (group) {
       setName(group.name);
-      setDescription(group.description);
-      setMembershipType(group.membership.type);
-      setPassword(group.membership.password || '');
-      setInviteCode(group.membership.inviteCode || '');
+      setDescription(group.description || '');
+      // Handle both API format (joinPolicy, hasPassword, inviteCode) and localStorage format (membership.type, etc.)
+      setMembershipType(group.joinPolicy || group.membership?.type || 'open');
+      setPassword(group.membership?.password || '');
+      setInviteCode(group.inviteCode || group.membership?.inviteCode || '');
       setVisibility(group.visibility);
     }
   }, [group]);
@@ -348,9 +349,9 @@ function GroupSettingsPage() {
         isOpen={showInviteModal}
         onClose={() => setShowInviteModal(false)}
         groupId={groupId}
-        membershipType={group.membership.type}
-        password={group.membership.password}
-        inviteCode={group.membership.inviteCode}
+        membershipType={group.joinPolicy || group.membership?.type || 'open'}
+        password={group.membership?.password}
+        inviteCode={group.inviteCode || group.membership?.inviteCode}
       />
     </main>
   );

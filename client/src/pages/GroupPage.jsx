@@ -74,9 +74,12 @@ function GroupPage() {
     );
   }
 
+  // Get membership type - handle both API format (joinPolicy) and localStorage format (membership.type)
+  const membershipType = group.joinPolicy || group.membership?.type || 'open';
+
   // Handle join
   const handleJoinClick = () => {
-    if (group.membership.type === 'open') {
+    if (membershipType === 'open') {
       // Direct join
       const result = joinGroup(currentUserId);
       if (!result.success) {
@@ -91,12 +94,12 @@ function GroupPage() {
   const handleJoinWithCredentials = (credential) => {
     setJoinError('');
 
-    if (group.membership.type === 'password') {
+    if (membershipType === 'password') {
       if (!verifyPassword(groupId, credential)) {
         setJoinError('Incorrect password');
         return;
       }
-    } else if (group.membership.type === 'invite-only') {
+    } else if (membershipType === 'invite-only' || membershipType === 'invite_only') {
       if (!verifyInviteCode(groupId, credential)) {
         setJoinError('Invalid invite code');
         return;
@@ -250,7 +253,7 @@ function GroupPage() {
           setJoinError('');
         }}
         onJoin={handleJoinWithCredentials}
-        membershipType={group.membership.type}
+        membershipType={membershipType}
         groupName={group.name}
         error={joinError}
       />

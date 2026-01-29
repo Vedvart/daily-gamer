@@ -8,17 +8,21 @@ import './GroupCard.css';
 function GroupCard({ group, currentUserId }) {
   const { members, isMember } = useGroupMembership(group.id);
 
-  const memberCount = members.length;
+  const memberCount = group.memberCount || members.length;
   const isUserMember = isMember(currentUserId);
+
+  // Get membership type - handle both API format (joinPolicy) and localStorage format (membership.type)
+  const membershipType = group.joinPolicy || group.membership?.type || 'open';
 
   // Get membership type label
   const getMembershipLabel = () => {
-    switch (group.membership.type) {
+    switch (membershipType) {
       case 'open':
         return 'Open';
       case 'password':
         return 'Password';
       case 'invite-only':
+      case 'invite_only':
         return 'Invite Only';
       default:
         return '';
@@ -39,8 +43,8 @@ function GroupCard({ group, currentUserId }) {
     }
   };
 
-  // Get game count
-  const enabledGamesCount = group.layout?.enabledGames?.length || 0;
+  // Get game count - handle both API format (trackedGames) and localStorage format (layout.enabledGames)
+  const enabledGamesCount = group.trackedGames?.length || group.layout?.enabledGames?.length || 0;
 
   return (
     <Link to={`/group/${group.id}`} className="group-card">
@@ -50,7 +54,7 @@ function GroupCard({ group, currentUserId }) {
           <span className="group-card__visibility" title={group.visibility}>
             {getVisibilityIcon()}
           </span>
-          <span className={`group-card__membership group-card__membership--${group.membership.type}`}>
+          <span className={`group-card__membership group-card__membership--${membershipType}`}>
             {getMembershipLabel()}
           </span>
         </div>

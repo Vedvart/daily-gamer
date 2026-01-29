@@ -26,14 +26,18 @@ function GroupHeader({
     }
   };
 
+  // Get membership type - handle both API format (joinPolicy) and localStorage format (membership.type)
+  const membershipType = group.joinPolicy || group.membership?.type || 'open';
+
   // Get membership type label
   const getMembershipLabel = () => {
-    switch (group.membership.type) {
+    switch (membershipType) {
       case 'open':
         return 'Open to join';
       case 'password':
         return 'Password required';
       case 'invite-only':
+      case 'invite_only':
         return 'Invite only';
       default:
         return '';
@@ -41,7 +45,7 @@ function GroupHeader({
   };
 
   const visibility = getVisibilityLabel();
-  const enabledGamesCount = group.layout?.enabledGames?.length || 0;
+  const enabledGamesCount = group.trackedGames?.length || group.layout?.enabledGames?.length || 0;
 
   return (
     <header className="group-header">
