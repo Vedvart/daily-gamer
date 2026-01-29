@@ -2,6 +2,7 @@
 // Manages group membership - join, leave, invite, kick
 
 import { useState, useEffect, useCallback } from 'react';
+import { groupsApi } from '../utils/api';
 
 function getStorageKey(groupId) {
   return `dailygamer_group_members_${groupId}`;
@@ -11,10 +12,11 @@ function useGroupMembership(groupId) {
   const [members, setMembers] = useState([]);
   const [pendingInvites, setPendingInvites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [useApi, setUseApi] = useState(false);
 
   const storageKey = getStorageKey(groupId);
 
-  // Load membership data from localStorage
+  // Load membership data
   useEffect(() => {
     if (!groupId) {
       setMembers([]);
@@ -23,35 +25,69 @@ function useGroupMembership(groupId) {
       return;
     }
 
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const data = JSON.parse(stored);
-        setMembers(data.members || []);
-        setPendingInvites(data.pendingInvites || []);
-      } else {
+    async function loadMembership() {
+      // Try API first
+      try {
+        const apiMembers = await groupsApi.getMembers(groupId);
+        if (apiMembers) {
+          // Transform API response to match expected format
+          const transformed = apiMembers.map(m => ({
+            userId: m.userId,
+            role: m.role,
+            joinedAt: m.joinedAt,
+            user: m.user,
+          }));
+          setMembers(transformed);
+          setUseApi(true);
+
+          // Also load invites
+          try {
+            const invites = await groupsApi.getInvites(groupId);
+            setPendingInvites(invites || []);
+          } catch {
+            // Invites might not be accessible to non-admins
+          }
+
+          setIsLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.log('API not available for membership, using localStorage:', e.message);
+      }
+
+      // Fall back to localStorage
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const data = JSON.parse(stored);
+          setMembers(data.members || []);
+          setPendingInvites(data.pendingInvites || []);
+        } else {
+          setMembers([]);
+          setPendingInvites([]);
+        }
+      } catch (e) {
+        console.error('Failed to load group membership:', e);
         setMembers([]);
         setPendingInvites([]);
       }
-    } catch (e) {
-      console.error('Failed to load group membership:', e);
-      setMembers([]);
-      setPendingInvites([]);
+
+      setIsLoading(false);
     }
 
-    setIsLoading(false);
+    loadMembership();
   }, [groupId, storageKey]);
 
-  // Save membership data to localStorage
+  // Save membership data to localStorage (fallback mode only)
   const save = useCallback((newMembers, newInvites) => {
-    if (!groupId) return;
+    if (!groupId || useApi) return;
 
     const data = {
       members: newMembers,
       pendingInvites: newInvites
     };
     localStorage.setItem(storageKey, JSON.stringify(data));
-  }, [groupId, storageKey]);
+  }, [groupId, storageKey, useApi]);
 
   // Check if a user is a member
   const isMember = useCallback((userId) => {
@@ -76,11 +112,32 @@ function useGroupMembership(groupId) {
   }, [getMemberRole]);
 
   // Join the group
-  const joinGroup = useCallback((userId) => {
+  const joinGroup = useCallback(async (userId, password = null) => {
     if (isMember(userId)) {
       return { success: false, error: 'Already a member' };
     }
 
+    // Try API first
+    if (useApi) {
+      try {
+        await groupsApi.join(groupId, userId, password);
+        // Refresh members
+        const apiMembers = await groupsApi.getMembers(groupId);
+        if (apiMembers) {
+          setMembers(apiMembers.map(m => ({
+            userId: m.userId,
+            role: m.role,
+            joinedAt: m.joinedAt,
+            user: m.user,
+          })));
+        }
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // Local fallback
     const newMember = {
       userId,
       role: 'member',
@@ -92,10 +149,10 @@ function useGroupMembership(groupId) {
     save(newMembers, pendingInvites);
 
     return { success: true };
-  }, [members, pendingInvites, isMember, save]);
+  }, [groupId, members, pendingInvites, isMember, save, useApi]);
 
   // Leave the group
-  const leaveGroup = useCallback((userId) => {
+  const leaveGroup = useCallback(async (userId) => {
     if (!isMember(userId)) {
       return { success: false, error: 'Not a member' };
     }
@@ -106,15 +163,27 @@ function useGroupMembership(groupId) {
       return { success: false, error: 'Cannot leave - you are the only admin' };
     }
 
+    // Try API first
+    if (useApi) {
+      try {
+        await groupsApi.leave(groupId, userId);
+        setMembers(prev => prev.filter(m => m.userId !== userId));
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // Local fallback
     const newMembers = members.filter(m => m.userId !== userId);
     setMembers(newMembers);
     save(newMembers, pendingInvites);
 
     return { success: true };
-  }, [members, pendingInvites, isMember, save]);
+  }, [groupId, members, pendingInvites, isMember, save, useApi]);
 
   // Kick a member (requires admin/mod)
-  const kickMember = useCallback((actorId, targetId) => {
+  const kickMember = useCallback(async (actorId, targetId) => {
     if (!isModerator(actorId)) {
       return { success: false, error: 'Not authorized' };
     }
@@ -134,15 +203,27 @@ function useGroupMembership(groupId) {
       return { success: false, error: 'Moderators cannot kick other moderators' };
     }
 
+    // Try API first
+    if (useApi) {
+      try {
+        await groupsApi.removeMember(groupId, targetId);
+        setMembers(prev => prev.filter(m => m.userId !== targetId));
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // Local fallback
     const newMembers = members.filter(m => m.userId !== targetId);
     setMembers(newMembers);
     save(newMembers, pendingInvites);
 
     return { success: true };
-  }, [members, pendingInvites, isModerator, getMemberRole, save]);
+  }, [groupId, members, pendingInvites, isModerator, getMemberRole, save, useApi]);
 
   // Update a member's role (admin only)
-  const updateRole = useCallback((actorId, targetId, newRole) => {
+  const updateRole = useCallback(async (actorId, targetId, newRole) => {
     if (!isAdmin(actorId)) {
       return { success: false, error: 'Not authorized' };
     }
@@ -159,6 +240,20 @@ function useGroupMembership(groupId) {
       }
     }
 
+    // Try API first
+    if (useApi) {
+      try {
+        await groupsApi.updateMemberRole(groupId, targetId, newRole);
+        setMembers(prev => prev.map(m =>
+          m.userId === targetId ? { ...m, role: newRole } : m
+        ));
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // Local fallback
     const newMembers = members.map(m =>
       m.userId === targetId ? { ...m, role: newRole } : m
     );
@@ -166,10 +261,10 @@ function useGroupMembership(groupId) {
     save(newMembers, pendingInvites);
 
     return { success: true };
-  }, [members, pendingInvites, isAdmin, isMember, save]);
+  }, [groupId, members, pendingInvites, isAdmin, isMember, save, useApi]);
 
   // Create an invite
-  const createInvite = useCallback((actorId, targetUserId) => {
+  const createInvite = useCallback(async (actorId, targetUserId) => {
     if (!isModerator(actorId)) {
       return { success: false, error: 'Not authorized' };
     }
@@ -182,6 +277,20 @@ function useGroupMembership(groupId) {
       return { success: false, error: 'Invite already pending' };
     }
 
+    // Try API first
+    if (useApi) {
+      try {
+        await groupsApi.createInvite(groupId, targetUserId, actorId);
+        // Refresh invites
+        const invites = await groupsApi.getInvites(groupId);
+        setPendingInvites(invites || []);
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // Local fallback
     const invite = {
       userId: targetUserId,
       invitedBy: actorId,
@@ -193,14 +302,15 @@ function useGroupMembership(groupId) {
     save(members, newInvites);
 
     return { success: true };
-  }, [members, pendingInvites, isModerator, isMember, save]);
+  }, [groupId, members, pendingInvites, isModerator, isMember, save, useApi]);
 
   // Cancel an invite
-  const cancelInvite = useCallback((actorId, targetUserId) => {
+  const cancelInvite = useCallback(async (actorId, targetUserId) => {
     if (!isModerator(actorId)) {
       return { success: false, error: 'Not authorized' };
     }
 
+    // API doesn't have a cancel endpoint, so this is local only
     const newInvites = pendingInvites.filter(i => i.userId !== targetUserId);
     setPendingInvites(newInvites);
     save(members, newInvites);
@@ -209,13 +319,33 @@ function useGroupMembership(groupId) {
   }, [members, pendingInvites, isModerator, save]);
 
   // Accept an invite (user perspective)
-  const acceptInvite = useCallback((userId) => {
+  const acceptInvite = useCallback(async (userId) => {
     const invite = pendingInvites.find(i => i.userId === userId);
-    if (!invite) {
+    if (!invite && !useApi) {
       return { success: false, error: 'No pending invite' };
     }
 
-    // Add as member
+    // Try API first
+    if (useApi) {
+      try {
+        await groupsApi.respondToInvite(groupId, userId, true);
+        // Refresh members
+        const apiMembers = await groupsApi.getMembers(groupId);
+        if (apiMembers) {
+          setMembers(apiMembers.map(m => ({
+            userId: m.userId,
+            role: m.role,
+            joinedAt: m.joinedAt,
+            user: m.user,
+          })));
+        }
+        return { success: true };
+      } catch (e) {
+        return { success: false, error: e.message };
+      }
+    }
+
+    // Local fallback
     const newMember = {
       userId,
       role: 'member',
@@ -230,12 +360,33 @@ function useGroupMembership(groupId) {
     save(newMembers, newInvites);
 
     return { success: true };
-  }, [members, pendingInvites, save]);
+  }, [groupId, members, pendingInvites, save, useApi]);
+
+  // Refresh membership from API
+  const refreshMembership = useCallback(async () => {
+    if (!groupId) return;
+
+    try {
+      const apiMembers = await groupsApi.getMembers(groupId);
+      if (apiMembers) {
+        setMembers(apiMembers.map(m => ({
+          userId: m.userId,
+          role: m.role,
+          joinedAt: m.joinedAt,
+          user: m.user,
+        })));
+        setUseApi(true);
+      }
+    } catch (e) {
+      console.log('Could not refresh membership from API:', e.message);
+    }
+  }, [groupId]);
 
   return {
     members,
     pendingInvites,
     isLoading,
+    useApi,
     isMember,
     isAdmin,
     isModerator,
@@ -246,7 +397,8 @@ function useGroupMembership(groupId) {
     updateRole,
     createInvite,
     cancelInvite,
-    acceptInvite
+    acceptInvite,
+    refreshMembership
   };
 }
 

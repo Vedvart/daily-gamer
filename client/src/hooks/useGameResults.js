@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { resultsApi } from '../utils/api';
 
 // Get storage key for a user's results
 function getStorageKey(userId) {
@@ -9,16 +10,18 @@ function getStorageKey(userId) {
 }
 
 /**
- * Custom hook for managing game results with localStorage persistence
+ * Custom hook for managing game results with API or localStorage persistence
  * @param {string} userId - Optional user ID. If provided, loads that user's results.
  * @param {boolean} readOnly - If true, results cannot be modified (for viewing other users)
  */
 function useGameResults(userId = null, readOnly = false) {
   const [results, setResults] = useState([]);
+  const [useApi, setUseApi] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const storageKey = getStorageKey(userId);
   const prevStorageKey = useRef(storageKey);
 
-  // Load results from localStorage on mount or when userId changes
+  // Load results on mount or when userId changes
   useEffect(() => {
     // Reset results when switching users
     if (prevStorageKey.current !== storageKey) {
@@ -26,28 +29,53 @@ function useGameResults(userId = null, readOnly = false) {
       prevStorageKey.current = storageKey;
     }
 
-    try {
-      const stored = localStorage.getItem(storageKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setResults(parsed.results || []);
+    async function loadResults() {
+      if (!userId) {
+        setIsLoading(false);
+        return;
       }
-    } catch (e) {
-      console.error('Failed to load results from localStorage:', e);
-    }
-  }, [storageKey]);
 
-  // Save results to localStorage whenever they change
+      // Try API first
+      try {
+        const apiResults = await resultsApi.list({ userId, limit: 500 });
+        if (apiResults) {
+          setResults(apiResults);
+          setUseApi(true);
+          setIsLoading(false);
+          return;
+        }
+      } catch (e) {
+        console.log('API not available for results, using localStorage:', e.message);
+      }
+
+      // Fall back to localStorage
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setResults(parsed.results || []);
+        }
+      } catch (e) {
+        console.error('Failed to load results from localStorage:', e);
+      }
+
+      setIsLoading(false);
+    }
+
+    loadResults();
+  }, [userId, storageKey]);
+
+  // Save results to localStorage whenever they change (fallback mode only)
   useEffect(() => {
-    // Only save if not in read-only mode
-    if (!readOnly && results.length > 0) {
+    // Only save if not in read-only mode and not using API
+    if (!readOnly && !useApi && results.length > 0) {
       try {
         localStorage.setItem(storageKey, JSON.stringify({ results }));
       } catch (e) {
         console.error('Failed to save results to localStorage:', e);
       }
     }
-  }, [results, storageKey, readOnly]);
+  }, [results, storageKey, readOnly, useApi]);
 
   // Get today's date in YYYY-MM-DD format
   const getToday = useCallback(() => {
@@ -55,16 +83,57 @@ function useGameResults(userId = null, readOnly = false) {
   }, []);
 
   // Filter results for today
-  const todayResults = results.filter(r => r.date === getToday());
+  const todayResults = results.filter(r => {
+    const resultDate = r.playDate || r.date;
+    return resultDate === getToday();
+  });
 
   // Add a new result (prevents duplicates based on gameId + puzzleNumber)
-  const addResult = useCallback((result) => {
+  const addResult = useCallback(async (result) => {
     // Don't allow adding results in read-only mode
     if (readOnly) {
       console.warn('Cannot add results in read-only mode');
       return;
     }
 
+    // Try API first
+    if (useApi) {
+      try {
+        const apiResult = await resultsApi.create({
+          userId: userId,
+          gameId: result.gameId,
+          puzzleNumber: result.puzzleNumber,
+          playDate: result.date,
+          rawText: result.rawText,
+          scoreValue: result.scoreValue,
+          scoreDisplay: result.scoreDisplay || result.score,
+          isFailed: !result.won,
+          isGreat: result.isGreat,
+          achievement: result.isReversePerfect ? 'reverse_perfect' :
+                       result.isPurpleFirst ? 'purple_first' : null,
+          extraData: result.extraData || null,
+        });
+
+        // Update local state
+        setResults(prev => {
+          const existingIndex = prev.findIndex(
+            r => r.gameId === result.gameId && r.puzzleNumber === result.puzzleNumber
+          );
+          if (existingIndex !== -1) {
+            const updated = [...prev];
+            updated[existingIndex] = apiResult;
+            return updated;
+          }
+          return [...prev, apiResult];
+        });
+        return;
+      } catch (e) {
+        console.error('Failed to save result to API:', e.message);
+        // Fall through to local storage
+      }
+    }
+
+    // Local storage fallback
     setResults(prev => {
       // Check for duplicate
       const existingIndex = prev.findIndex(
@@ -81,16 +150,26 @@ function useGameResults(userId = null, readOnly = false) {
       // Add new result
       return [...prev, result];
     });
-  }, [readOnly]);
+  }, [readOnly, useApi, userId]);
 
   // Remove a result by ID
-  const removeResult = useCallback((id) => {
+  const removeResult = useCallback(async (id) => {
     if (readOnly) {
       console.warn('Cannot remove results in read-only mode');
       return;
     }
+
+    // Try API first
+    if (useApi) {
+      try {
+        await resultsApi.delete(id);
+      } catch (e) {
+        console.error('Failed to delete result from API:', e.message);
+      }
+    }
+
     setResults(prev => prev.filter(r => r.id !== id));
-  }, [readOnly]);
+  }, [readOnly, useApi]);
 
   // Get stats for a specific game
   const getStats = useCallback((gameId) => {
@@ -107,7 +186,7 @@ function useGameResults(userId = null, readOnly = false) {
       };
     }
 
-    const wins = gameResults.filter(r => r.won).length;
+    const wins = gameResults.filter(r => r.won || !r.isFailed).length;
 
     // Calculate average (for time-based games like Mini, lower is better)
     const isTimeBased = gameId === 'mini';
@@ -126,7 +205,7 @@ function useGameResults(userId = null, readOnly = false) {
 
     // Calculate streaks (simplified - based on consecutive wins)
     const sortedResults = [...gameResults].sort((a, b) =>
-      new Date(b.date) - new Date(a.date)
+      new Date(b.playDate || b.date) - new Date(a.playDate || a.date)
     );
 
     let currentStreak = 0;
@@ -134,7 +213,8 @@ function useGameResults(userId = null, readOnly = false) {
     let tempStreak = 0;
 
     for (const result of sortedResults) {
-      if (result.won) {
+      const isWin = result.won || !result.isFailed;
+      if (isWin) {
         tempStreak++;
         if (currentStreak === 0) currentStreak = tempStreak;
         longestStreak = Math.max(longestStreak, tempStreak);
@@ -156,14 +236,20 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get result for a specific game and date
   const getResultForDate = useCallback((gameId, date) => {
-    return results.find(r => r.gameId === gameId && r.date === date);
+    return results.find(r => r.gameId === gameId && (r.playDate === date || r.date === date));
   }, [results]);
 
   // ============ HISTOGRAM FUNCTIONS ============
+  // Helper to normalize result properties (API uses camelCase, local uses mixed)
+  const normalizeResult = (r) => ({
+    ...r,
+    won: r.won ?? !r.isFailed,
+    date: r.playDate || r.date,
+  });
 
   // Get histogram data for Wordle (score distribution 1-6, X)
   const getWordleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'wordle');
+    const gameResults = results.filter(r => r.gameId === 'wordle').map(normalizeResult);
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
 
     gameResults.forEach(r => {
@@ -179,15 +265,16 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Connections (includes Reverse Perfect and Purple First)
   const getConnectionsHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'connections');
+    const gameResults = results.filter(r => r.gameId === 'connections').map(normalizeResult);
     const histogram = { 'RP': 0, 'PF': 0, 0: 0, 1: 0, 2: 0, 3: 0, 'X': 0 };
 
     gameResults.forEach(r => {
+      const achievement = r.achievement || (r.isReversePerfect ? 'reverse_perfect' : r.isPurpleFirst ? 'purple_first' : null);
       if (!r.won) {
         histogram['X']++;
-      } else if (r.isReversePerfect) {
+      } else if (achievement === 'reverse_perfect' || r.isReversePerfect) {
         histogram['RP']++;
-      } else if (r.isPurpleFirst) {
+      } else if (achievement === 'purple_first' || r.isPurpleFirst) {
         histogram['PF']++;
       } else {
         // scoreValue is 4 - mistakes, so mistakes = 4 - scoreValue
@@ -205,7 +292,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for NYT Mini (time buckets)
   const getMiniHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'mini');
+    const gameResults = results.filter(r => r.gameId === 'mini').map(normalizeResult);
     const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
 
     gameResults.forEach(r => {
@@ -228,7 +315,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Bandle (score distribution 1-6, X)
   const getBandleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'bandle');
+    const gameResults = results.filter(r => r.gameId === 'bandle').map(normalizeResult);
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
 
     gameResults.forEach(r => {
@@ -244,7 +331,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Catfishing (half-point increments 0, 0.5, 1, 1.5, ... 10)
   const getCatfishingHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'catfishing');
+    const gameResults = results.filter(r => r.gameId === 'catfishing').map(normalizeResult);
     // Initialize all half-point buckets
     const histogram = {};
     for (let i = 0; i <= 20; i++) {
@@ -265,7 +352,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for TimeGuessr (5k point buckets)
   const getTimeguessrHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'timeguessr');
+    const gameResults = results.filter(r => r.gameId === 'timeguessr').map(normalizeResult);
     const histogram = {
       '0-5k': 0, '5-10k': 0, '10-15k': 0, '15-20k': 0, '20-25k': 0,
       '25-30k': 0, '30-35k': 0, '35-40k': 0, '40-45k': 0, '45-50k': 0
@@ -290,7 +377,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Strands (hints used)
   const getStrandsHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'strands');
+    const gameResults = results.filter(r => r.gameId === 'strands').map(normalizeResult);
     const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, '4+': 0 };
 
     gameResults.forEach(r => {
@@ -307,7 +394,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for LA Times Mini (same as NYT Mini - time buckets)
   const getLatimesMiniHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'latimesmini');
+    const gameResults = results.filter(r => r.gameId === 'latimesmini').map(normalizeResult);
     const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
 
     gameResults.forEach(r => {
@@ -324,7 +411,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Travle (extra guesses)
   const getTravleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'travle');
+    const gameResults = results.filter(r => r.gameId === 'travle').map(normalizeResult);
     const histogram = { '+0': 0, '+1': 0, '+2': 0, '+3': 0, '+4': 0, '+5+': 0 };
 
     gameResults.forEach(r => {
@@ -342,7 +429,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Flagle (guesses 1-6, X)
   const getFlagleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'flagle');
+    const gameResults = results.filter(r => r.gameId === 'flagle').map(normalizeResult);
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
 
     gameResults.forEach(r => {
@@ -358,7 +445,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Kinda Hard Golf (strokes)
   const getKindahardgolfHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'kindahardgolf');
+    const gameResults = results.filter(r => r.gameId === 'kindahardgolf').map(normalizeResult);
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
 
     gameResults.forEach(r => {
@@ -376,7 +463,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for enclose.horse (percentage buckets)
   const getEnclosehorseHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'enclosehorse');
+    const gameResults = results.filter(r => r.gameId === 'enclosehorse').map(normalizeResult);
     const histogram = { '0-20': 0, '21-40': 0, '41-60': 0, '61-80': 0, '81-99': 0, '100': 0 };
 
     gameResults.forEach(r => {
@@ -394,7 +481,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Kickoff League (kicks)
   const getKickoffleagueHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'kickoffleague');
+    const gameResults = results.filter(r => r.gameId === 'kickoffleague').map(normalizeResult);
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
 
     gameResults.forEach(r => {
@@ -412,7 +499,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Scrandle (score out of 10)
   const getScrandleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'scrandle');
+    const gameResults = results.filter(r => r.gameId === 'scrandle').map(normalizeResult);
     const histogram = {};
     for (let i = 0; i <= 10; i++) histogram[i] = 0;
 
@@ -426,7 +513,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for One Up Puzzle (time buckets)
   const getOneuppuzzleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'oneuppuzzle');
+    const gameResults = results.filter(r => r.gameId === 'oneuppuzzle').map(normalizeResult);
     const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
 
     gameResults.forEach(r => {
@@ -443,7 +530,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Clues By Sam (time buckets)
   const getCluesbysamHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'cluesbysam');
+    const gameResults = results.filter(r => r.gameId === 'cluesbysam').map(normalizeResult);
     const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
 
     gameResults.forEach(r => {
@@ -460,7 +547,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Minute Cryptic (score vs par)
   const getMinutecrypticHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'minutecryptic');
+    const gameResults = results.filter(r => r.gameId === 'minutecryptic').map(normalizeResult);
     const histogram = { '≤-2': 0, '-1': 0, '0': 0, '+1': 0, '+2': 0, '≥+3': 0 };
 
     gameResults.forEach(r => {
@@ -480,7 +567,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Daily Dozen (score out of 12)
   const getDailydozenHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'dailydozen');
+    const gameResults = results.filter(r => r.gameId === 'dailydozen').map(normalizeResult);
     const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-11': 0, '12': 0 };
 
     gameResults.forEach(r => {
@@ -497,7 +584,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for More Or Less (streak ranges)
   const getMoreorlessHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'moreorless');
+    const gameResults = results.filter(r => r.gameId === 'moreorless').map(normalizeResult);
     const histogram = { '1-5': 0, '6-10': 0, '11-15': 0, '16-20': 0, '21+': 0 };
 
     gameResults.forEach(r => {
@@ -514,7 +601,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Eruptle (score out of 10)
   const getEruptleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'eruptle');
+    const gameResults = results.filter(r => r.gameId === 'eruptle').map(normalizeResult);
     const histogram = {};
     for (let i = 0; i <= 10; i++) histogram[i] = 0;
 
@@ -528,7 +615,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Thrice (points 0-15)
   const getThriceHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'thrice');
+    const gameResults = results.filter(r => r.gameId === 'thrice').map(normalizeResult);
     const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0, '13-15': 0 };
 
     gameResults.forEach(r => {
@@ -592,6 +679,8 @@ function useGameResults(userId = null, readOnly = false) {
   return {
     results,
     todayResults,
+    isLoading,
+    useApi,
     addResult,
     removeResult,
     getStats,
