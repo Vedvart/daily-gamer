@@ -35,10 +35,10 @@ import './UserProfilePage.css';
 function UserProfilePage() {
   const { userId } = useParams();
   const navigate = useNavigate();
-  const { getUser } = useUsers();
+  const { getUserSync } = useUsers();
   const { currentUserId } = useCurrentUser();
 
-  const user = getUser(userId);
+  const user = getUserSync(userId);
   const isOwnProfile = userId === currentUserId;
 
   const handleBack = () => {

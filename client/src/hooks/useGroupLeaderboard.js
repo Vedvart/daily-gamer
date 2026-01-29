@@ -1,8 +1,8 @@
 // useGroupLeaderboard Hook
 // Computes leaderboard rankings for a group
 
-import { useState, useEffect, useMemo } from 'react';
-import useGameResults from './useGameResults';
+import { useState, useEffect } from 'react';
+import { resultsApi } from '../utils/api';
 import {
   calculateDailyRankings,
   calculateHistoricalRankings,
@@ -12,14 +12,57 @@ import {
 /**
  * Hook to get daily leaderboard for a specific game
  */
-export function useDailyLeaderboard(members, gameId) {
+export function useDailyLeaderboard(members, gameId, useApi = false) {
   const [rankings, setRankings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const today = new Date().toISOString().split('T')[0];
 
-  // We need to load results for each member
-  // This is a simplified approach - in production, this would be batched
   useEffect(() => {
-    const loadRankings = () => {
+    const loadRankings = async () => {
+      if (!members.length || !gameId) {
+        setRankings([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Try API first if enabled
+      if (useApi) {
+        try {
+          const userIds = members.map(m => m.userId);
+          const apiResults = await resultsApi.getLeaderboard(gameId, today, userIds);
+
+          if (apiResults) {
+            // Transform API results to expected format
+            const memberResults = members.map(member => {
+              const result = apiResults.find(r => r.userId === member.userId) || null;
+              // Normalize result properties
+              if (result) {
+                return {
+                  userId: member.userId,
+                  result: {
+                    ...result,
+                    score: result.score || result.scoreDisplay,
+                    won: result.won !== undefined ? result.won : !result.isFailed,
+                    date: result.date || result.playDate,
+                  }
+                };
+              }
+              return { userId: member.userId, result: null };
+            });
+
+            const calculated = calculateDailyRankings(gameId, memberResults);
+            setRankings(calculated);
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.log('API leaderboard not available, falling back to localStorage:', e.message);
+        }
+      }
+
+      // Fall back to localStorage
       const memberResults = members.map(member => {
         const key = `dailygamer_results_${member.userId}`;
         const stored = localStorage.getItem(key);
@@ -28,7 +71,9 @@ export function useDailyLeaderboard(members, gameId) {
         if (stored) {
           try {
             const data = JSON.parse(stored);
-            result = data.results?.find(r => r.gameId === gameId && r.date === today) || null;
+            result = data.results?.find(r =>
+              r.gameId === gameId && (r.date === today || r.playDate === today)
+            ) || null;
           } catch (e) {
             console.error('Failed to parse results:', e);
           }
@@ -39,26 +84,59 @@ export function useDailyLeaderboard(members, gameId) {
 
       const calculated = calculateDailyRankings(gameId, memberResults);
       setRankings(calculated);
+      setIsLoading(false);
     };
 
-    if (members.length > 0 && gameId) {
-      loadRankings();
-    } else {
-      setRankings([]);
-    }
-  }, [members, gameId, today]);
+    loadRankings();
+  }, [members, gameId, today, useApi]);
 
-  return rankings;
+  return { rankings, isLoading };
 }
 
 /**
  * Hook to get historical leaderboard for a specific game
  */
-export function useHistoricalLeaderboard(members, gameId) {
+export function useHistoricalLeaderboard(members, gameId, useApi = false) {
   const [rankings, setRankings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadRankings = () => {
+    const loadRankings = async () => {
+      if (!members.length || !gameId) {
+        setRankings([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Try API first if enabled
+      if (useApi) {
+        try {
+          const userIds = members.map(m => m.userId);
+          const apiResults = await resultsApi.getHistoricalLeaderboard(gameId, userIds, 50);
+
+          if (apiResults) {
+            // API already returns aggregated historical data
+            const calculated = apiResults.map((r, index) => ({
+              rank: index + 1,
+              userId: r.userId,
+              averageScore: r.averageScore,
+              gamesPlayed: r.gamesPlayed,
+              bestScore: r.bestScore,
+              formattedScore: formatHistoricalScore(gameId, r.averageScore, r.gamesPlayed),
+            }));
+
+            setRankings(calculated);
+            setIsLoading(false);
+            return;
+          }
+        } catch (e) {
+          console.log('API historical leaderboard not available, falling back to localStorage:', e.message);
+        }
+      }
+
+      // Fall back to localStorage
       const memberResults = members.map(member => {
         const key = `dailygamer_results_${member.userId}`;
         const stored = localStorage.getItem(key);
@@ -78,28 +156,81 @@ export function useHistoricalLeaderboard(members, gameId) {
 
       const calculated = calculateHistoricalRankings(gameId, memberResults);
       setRankings(calculated);
+      setIsLoading(false);
     };
 
-    if (members.length > 0 && gameId) {
-      loadRankings();
-    } else {
-      setRankings([]);
-    }
-  }, [members, gameId]);
+    loadRankings();
+  }, [members, gameId, useApi]);
 
-  return rankings;
+  return { rankings, isLoading };
 }
 
 /**
  * Hook to get combined daily rankings across all enabled games
  */
-export function useCombinedDailyLeaderboard(members, enabledGames) {
+export function useCombinedDailyLeaderboard(members, enabledGames, useApi = false) {
   const [rankings, setRankings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
-    const loadRankings = () => {
-      // First, get all results for all members
+    const loadRankings = async () => {
+      if (!members.length || !enabledGames.length) {
+        setRankings([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Try API first if enabled
+      if (useApi) {
+        try {
+          const userIds = members.map(m => m.userId);
+
+          // Fetch results for all games in parallel
+          const gameResultsPromises = enabledGames.map(gameId =>
+            resultsApi.getLeaderboard(gameId, today, userIds)
+              .then(results => ({ gameId, results: results || [] }))
+              .catch(() => ({ gameId, results: [] }))
+          );
+
+          const allGameResults = await Promise.all(gameResultsPromises);
+
+          // Calculate rankings for each game
+          const gameRankings = allGameResults.map(({ gameId, results }) => {
+            const memberResults = members.map(member => {
+              const result = results.find(r => r.userId === member.userId) || null;
+              if (result) {
+                return {
+                  userId: member.userId,
+                  result: {
+                    ...result,
+                    score: result.score || result.scoreDisplay,
+                    won: result.won !== undefined ? result.won : !result.isFailed,
+                    date: result.date || result.playDate,
+                  }
+                };
+              }
+              return { userId: member.userId, result: null };
+            });
+
+            return {
+              gameId,
+              rankings: calculateDailyRankings(gameId, memberResults)
+            };
+          });
+
+          const combined = calculateCombinedRankings(gameRankings);
+          setRankings(combined);
+          setIsLoading(false);
+          return;
+        } catch (e) {
+          console.log('API combined leaderboard not available, falling back to localStorage:', e.message);
+        }
+      }
+
+      // Fall back to localStorage
       const memberResultsMap = {};
 
       for (const member of members) {
@@ -110,7 +241,9 @@ export function useCombinedDailyLeaderboard(members, enabledGames) {
         if (stored) {
           try {
             const data = JSON.parse(stored);
-            memberResultsMap[member.userId] = data.results?.filter(r => r.date === today) || [];
+            memberResultsMap[member.userId] = data.results?.filter(r =>
+              r.date === today || r.playDate === today
+            ) || [];
           } catch (e) {
             console.error('Failed to parse results:', e);
           }
@@ -130,30 +263,72 @@ export function useCombinedDailyLeaderboard(members, enabledGames) {
         };
       });
 
-      // Calculate combined rankings
       const combined = calculateCombinedRankings(gameRankings);
       setRankings(combined);
+      setIsLoading(false);
     };
 
-    if (members.length > 0 && enabledGames.length > 0) {
-      loadRankings();
-    } else {
-      setRankings([]);
-    }
-  }, [members, enabledGames, today]);
+    loadRankings();
+  }, [members, enabledGames, today, useApi]);
 
-  return rankings;
+  return { rankings, isLoading };
 }
 
 /**
  * Hook to get combined historical rankings across all enabled games
  */
-export function useCombinedHistoricalLeaderboard(members, enabledGames) {
+export function useCombinedHistoricalLeaderboard(members, enabledGames, useApi = false) {
   const [rankings, setRankings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadRankings = () => {
-      // First, get all results for all members
+    const loadRankings = async () => {
+      if (!members.length || !enabledGames.length) {
+        setRankings([]);
+        setIsLoading(false);
+        return;
+      }
+
+      setIsLoading(true);
+
+      // Try API first if enabled
+      if (useApi) {
+        try {
+          const userIds = members.map(m => m.userId);
+
+          // Fetch historical results for all games in parallel
+          const gameResultsPromises = enabledGames.map(gameId =>
+            resultsApi.getHistoricalLeaderboard(gameId, userIds, 50)
+              .then(results => ({ gameId, results: results || [] }))
+              .catch(() => ({ gameId, results: [] }))
+          );
+
+          const allGameResults = await Promise.all(gameResultsPromises);
+
+          // Calculate rankings for each game
+          const gameRankings = allGameResults.map(({ gameId, results }) => {
+            // Convert API historical format to expected rankings format
+            const rankings = results.map((r, index) => ({
+              rank: index + 1,
+              userId: r.userId,
+              averageScore: r.averageScore,
+              gamesPlayed: r.gamesPlayed,
+              score: r.averageScore,
+            }));
+
+            return { gameId, rankings };
+          });
+
+          const combined = calculateCombinedRankings(gameRankings);
+          setRankings(combined);
+          setIsLoading(false);
+          return;
+        } catch (e) {
+          console.log('API combined historical leaderboard not available, falling back to localStorage:', e.message);
+        }
+      }
+
+      // Fall back to localStorage
       const memberResultsMap = {};
 
       for (const member of members) {
@@ -184,19 +359,30 @@ export function useCombinedHistoricalLeaderboard(members, enabledGames) {
         };
       });
 
-      // Calculate combined rankings
       const combined = calculateCombinedRankings(gameRankings);
       setRankings(combined);
+      setIsLoading(false);
     };
 
-    if (members.length > 0 && enabledGames.length > 0) {
-      loadRankings();
-    } else {
-      setRankings([]);
-    }
-  }, [members, enabledGames]);
+    loadRankings();
+  }, [members, enabledGames, useApi]);
 
-  return rankings;
+  return { rankings, isLoading };
+}
+
+// Helper function to format historical scores for display
+function formatHistoricalScore(gameId, averageScore, gamesPlayed) {
+  if (!averageScore && averageScore !== 0) return '-';
+
+  const avg = parseFloat(averageScore);
+
+  // Games where lower is better
+  if (['wordle', 'bandle', 'flagle', 'mini', 'latimesmini', 'travle', 'kindahardgolf', 'kickoffleague'].includes(gameId)) {
+    return `${avg.toFixed(1)} avg (${gamesPlayed} games)`;
+  }
+
+  // Games where higher is better
+  return `${avg.toFixed(1)} avg (${gamesPlayed} games)`;
 }
 
 export default {

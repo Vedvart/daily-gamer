@@ -47,11 +47,24 @@ const errorHandler = (err, req, res, next) => {
           error: 'Referenced resource does not exist',
           details: err.detail,
         });
+      case '22P02': // invalid_text_representation (includes invalid UUID)
+        return res.status(400).json({
+          error: 'Invalid identifier format',
+          details: 'The provided ID is not in the correct format',
+        });
       case 'P0001': // raise_exception (custom triggers)
         return res.status(400).json({
           error: err.message,
         });
     }
+  }
+
+  // Handle invalid UUID errors from string matching
+  if (err.message && err.message.includes('invalid input syntax for type uuid')) {
+    return res.status(400).json({
+      error: 'Invalid identifier format',
+      details: 'The provided ID is not in the correct format',
+    });
   }
 
   // Handle known operational errors

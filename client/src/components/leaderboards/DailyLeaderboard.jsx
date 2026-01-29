@@ -8,22 +8,25 @@ import LeaderboardGameSelector from './LeaderboardGameSelector';
 import LeaderboardRow from './LeaderboardRow';
 import './DailyLeaderboard.css';
 
-function DailyLeaderboard({ groupId, enabledGames, members }) {
+function DailyLeaderboard({ groupId, enabledGames, members, useApi = false }) {
   const { currentUserId } = useCurrentUser();
   const [selectedGame, setSelectedGame] = useState('all');
 
   // Get rankings based on selection
-  const singleGameRankings = useDailyLeaderboard(
+  const { rankings: singleGameRankings, isLoading: singleLoading } = useDailyLeaderboard(
     selectedGame !== 'all' ? members : [],
-    selectedGame !== 'all' ? selectedGame : null
+    selectedGame !== 'all' ? selectedGame : null,
+    useApi
   );
 
-  const combinedRankings = useCombinedDailyLeaderboard(
+  const { rankings: combinedRankings, isLoading: combinedLoading } = useCombinedDailyLeaderboard(
     selectedGame === 'all' ? members : [],
-    selectedGame === 'all' ? enabledGames : []
+    selectedGame === 'all' ? enabledGames : [],
+    useApi
   );
 
   const rankings = selectedGame === 'all' ? combinedRankings : singleGameRankings;
+  const isLoading = selectedGame === 'all' ? combinedLoading : singleLoading;
 
   // Format date
   const today = new Date();
@@ -46,7 +49,11 @@ function DailyLeaderboard({ groupId, enabledGames, members }) {
         showAllOption={enabledGames.length > 1}
       />
 
-      {rankings.length > 0 ? (
+      {isLoading ? (
+        <div className="daily-leaderboard__empty">
+          <p>Loading leaderboard...</p>
+        </div>
+      ) : rankings.length > 0 ? (
         <div className="daily-leaderboard__list">
           {rankings.map(entry => (
             <LeaderboardRow

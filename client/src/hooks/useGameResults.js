@@ -9,6 +9,77 @@ function getStorageKey(userId) {
   return 'dailygamer_results';
 }
 
+// Normalize result properties between API format and parser format
+// API returns: scoreDisplay, isFailed, playDate
+// Parsers return: score, won, date, grid
+function normalizeResult(r) {
+  if (!r) return r;
+  return {
+    ...r,
+    // Map API properties to parser format
+    score: r.score || r.scoreDisplay,
+    won: r.won !== undefined ? r.won : !r.isFailed,
+    date: r.date || r.playDate,
+    // Preserve grid if available, or extract from rawText if possible
+    grid: r.grid || extractGridFromRawText(r.rawText, r.gameId),
+    // Keep both property names for compatibility
+    scoreDisplay: r.scoreDisplay || r.score,
+    isFailed: r.isFailed !== undefined ? r.isFailed : !r.won,
+    playDate: r.playDate || r.date,
+  };
+}
+
+// Extract emoji grid from raw text for display
+function extractGridFromRawText(rawText, gameId) {
+  if (!rawText) return null;
+
+  const lines = rawText.split('\n');
+
+  // Different games have different grid patterns
+  if (gameId === 'wordle' || gameId === 'bandle') {
+    // Look for lines with only emoji squares
+    const gridLines = lines.filter(line => {
+      const trimmed = line.trim();
+      return trimmed.length > 0 && /^[🟩🟨⬛⬜🟧🎸🎹🎺🎷🪘🎻\s]+$/.test(trimmed);
+    });
+    return gridLines.length > 0 ? gridLines.join('\n') : null;
+  }
+
+  if (gameId === 'connections') {
+    const gridLines = lines.filter(line => {
+      const trimmed = line.trim();
+      return trimmed.length > 0 && /^[🟨🟩🟦🟪\s]+$/.test(trimmed);
+    });
+    return gridLines.length > 0 ? gridLines.join('\n') : null;
+  }
+
+  if (gameId === 'strands') {
+    const gridLines = lines.filter(line => {
+      const trimmed = line.trim();
+      return trimmed.length > 0 && /^[🔵🟡💡\s]+$/.test(trimmed);
+    });
+    return gridLines.length > 0 ? gridLines.join('\n') : null;
+  }
+
+  if (gameId === 'catfishing') {
+    const gridLines = lines.filter(line => {
+      const trimmed = line.trim();
+      return trimmed.length > 0 && /^[🐈🐟⬜\s]+$/.test(trimmed);
+    });
+    return gridLines.length > 0 ? gridLines.join('\n') : null;
+  }
+
+  // For other games, look for any line that's mostly emojis
+  const gridLines = lines.filter(line => {
+    const trimmed = line.trim();
+    // Check if line has emojis and minimal text
+    const emojiCount = (trimmed.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length;
+    return emojiCount >= 2;
+  });
+
+  return gridLines.length > 0 ? gridLines.join('\n') : null;
+}
+
 /**
  * Custom hook for managing game results with API or localStorage persistence
  * @param {string} userId - Optional user ID. If provided, loads that user's results.
@@ -39,6 +110,7 @@ function useGameResults(userId = null, readOnly = false) {
       try {
         const apiResults = await resultsApi.list({ userId, limit: 500 });
         if (apiResults) {
+          // Normalize API results to match parser format
           setResults(apiResults);
           setUseApi(true);
           setIsLoading(false);
@@ -114,17 +186,18 @@ function useGameResults(userId = null, readOnly = false) {
           extraData: result.extraData || null,
         });
 
-        // Update local state
+        // Update local state with normalized result
+        const normalized = normalizeResult(apiResult);
         setResults(prev => {
           const existingIndex = prev.findIndex(
             r => r.gameId === result.gameId && r.puzzleNumber === result.puzzleNumber
           );
           if (existingIndex !== -1) {
             const updated = [...prev];
-            updated[existingIndex] = apiResult;
+            updated[existingIndex] = normalized;
             return updated;
           }
-          return [...prev, apiResult];
+          return [...prev, normalized];
         });
         return;
       } catch (e) {
@@ -240,16 +313,11 @@ function useGameResults(userId = null, readOnly = false) {
   }, [results]);
 
   // ============ HISTOGRAM FUNCTIONS ============
-  // Helper to normalize result properties (API uses camelCase, local uses mixed)
-  const normalizeResult = (r) => ({
-    ...r,
-    won: r.won ?? !r.isFailed,
-    date: r.playDate || r.date,
-  });
+  // Note: Results are already normalized when loaded, so we can use them directly
 
   // Get histogram data for Wordle (score distribution 1-6, X)
   const getWordleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'wordle').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'wordle');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
 
     gameResults.forEach(r => {
@@ -265,7 +333,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Connections (includes Reverse Perfect and Purple First)
   const getConnectionsHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'connections').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'connections');
     const histogram = { 'RP': 0, 'PF': 0, 0: 0, 1: 0, 2: 0, 3: 0, 'X': 0 };
 
     gameResults.forEach(r => {
@@ -292,7 +360,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for NYT Mini (time buckets)
   const getMiniHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'mini').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'mini');
     const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
 
     gameResults.forEach(r => {
@@ -315,7 +383,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Bandle (score distribution 1-6, X)
   const getBandleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'bandle').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'bandle');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
 
     gameResults.forEach(r => {
@@ -331,7 +399,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Catfishing (half-point increments 0, 0.5, 1, 1.5, ... 10)
   const getCatfishingHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'catfishing').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'catfishing');
     // Initialize all half-point buckets
     const histogram = {};
     for (let i = 0; i <= 20; i++) {
@@ -352,7 +420,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for TimeGuessr (5k point buckets)
   const getTimeguessrHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'timeguessr').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'timeguessr');
     const histogram = {
       '0-5k': 0, '5-10k': 0, '10-15k': 0, '15-20k': 0, '20-25k': 0,
       '25-30k': 0, '30-35k': 0, '35-40k': 0, '40-45k': 0, '45-50k': 0
@@ -377,7 +445,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Strands (hints used)
   const getStrandsHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'strands').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'strands');
     const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, '4+': 0 };
 
     gameResults.forEach(r => {
@@ -394,7 +462,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for LA Times Mini (same as NYT Mini - time buckets)
   const getLatimesMiniHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'latimesmini').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'latimesmini');
     const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
 
     gameResults.forEach(r => {
@@ -411,7 +479,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Travle (extra guesses)
   const getTravleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'travle').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'travle');
     const histogram = { '+0': 0, '+1': 0, '+2': 0, '+3': 0, '+4': 0, '+5+': 0 };
 
     gameResults.forEach(r => {
@@ -429,7 +497,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Flagle (guesses 1-6, X)
   const getFlagleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'flagle').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'flagle');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
 
     gameResults.forEach(r => {
@@ -445,7 +513,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Kinda Hard Golf (strokes)
   const getKindahardgolfHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'kindahardgolf').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'kindahardgolf');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
 
     gameResults.forEach(r => {
@@ -463,7 +531,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for enclose.horse (percentage buckets)
   const getEnclosehorseHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'enclosehorse').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'enclosehorse');
     const histogram = { '0-20': 0, '21-40': 0, '41-60': 0, '61-80': 0, '81-99': 0, '100': 0 };
 
     gameResults.forEach(r => {
@@ -481,7 +549,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Kickoff League (kicks)
   const getKickoffleagueHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'kickoffleague').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'kickoffleague');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
 
     gameResults.forEach(r => {
@@ -499,7 +567,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Scrandle (score out of 10)
   const getScrandleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'scrandle').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'scrandle');
     const histogram = {};
     for (let i = 0; i <= 10; i++) histogram[i] = 0;
 
@@ -513,7 +581,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for One Up Puzzle (time buckets)
   const getOneuppuzzleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'oneuppuzzle').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'oneuppuzzle');
     const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
 
     gameResults.forEach(r => {
@@ -530,7 +598,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Clues By Sam (time buckets)
   const getCluesbysamHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'cluesbysam').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'cluesbysam');
     const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
 
     gameResults.forEach(r => {
@@ -547,7 +615,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Minute Cryptic (score vs par)
   const getMinutecrypticHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'minutecryptic').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'minutecryptic');
     const histogram = { '≤-2': 0, '-1': 0, '0': 0, '+1': 0, '+2': 0, '≥+3': 0 };
 
     gameResults.forEach(r => {
@@ -567,7 +635,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Daily Dozen (score out of 12)
   const getDailydozenHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'dailydozen').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'dailydozen');
     const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-11': 0, '12': 0 };
 
     gameResults.forEach(r => {
@@ -584,7 +652,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for More Or Less (streak ranges)
   const getMoreorlessHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'moreorless').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'moreorless');
     const histogram = { '1-5': 0, '6-10': 0, '11-15': 0, '16-20': 0, '21+': 0 };
 
     gameResults.forEach(r => {
@@ -601,7 +669,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Eruptle (score out of 10)
   const getEruptleHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'eruptle').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'eruptle');
     const histogram = {};
     for (let i = 0; i <= 10; i++) histogram[i] = 0;
 
@@ -615,7 +683,7 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Get histogram data for Thrice (points 0-15)
   const getThriceHistogram = useCallback(() => {
-    const gameResults = results.filter(r => r.gameId === 'thrice').map(normalizeResult);
+    const gameResults = results.filter(r => r.gameId === 'thrice');
     const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0, '13-15': 0 };
 
     gameResults.forEach(r => {

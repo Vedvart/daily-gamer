@@ -8,22 +8,25 @@ import LeaderboardGameSelector from './LeaderboardGameSelector';
 import LeaderboardRow from './LeaderboardRow';
 import './HistoricalLeaderboard.css';
 
-function HistoricalLeaderboard({ groupId, enabledGames, members }) {
+function HistoricalLeaderboard({ groupId, enabledGames, members, useApi = false }) {
   const { currentUserId } = useCurrentUser();
   const [selectedGame, setSelectedGame] = useState('all');
 
   // Get rankings based on selection
-  const singleGameRankings = useHistoricalLeaderboard(
+  const { rankings: singleGameRankings, isLoading: singleLoading } = useHistoricalLeaderboard(
     selectedGame !== 'all' ? members : [],
-    selectedGame !== 'all' ? selectedGame : null
+    selectedGame !== 'all' ? selectedGame : null,
+    useApi
   );
 
-  const combinedRankings = useCombinedHistoricalLeaderboard(
+  const { rankings: combinedRankings, isLoading: combinedLoading } = useCombinedHistoricalLeaderboard(
     selectedGame === 'all' ? members : [],
-    selectedGame === 'all' ? enabledGames : []
+    selectedGame === 'all' ? enabledGames : [],
+    useApi
   );
 
   const rankings = selectedGame === 'all' ? combinedRankings : singleGameRankings;
+  const isLoading = selectedGame === 'all' ? combinedLoading : singleLoading;
 
   return (
     <div className="historical-leaderboard">
@@ -34,7 +37,11 @@ function HistoricalLeaderboard({ groupId, enabledGames, members }) {
         showAllOption={enabledGames.length > 1}
       />
 
-      {rankings.length > 0 ? (
+      {isLoading ? (
+        <div className="historical-leaderboard__empty">
+          <p>Loading leaderboard...</p>
+        </div>
+      ) : rankings.length > 0 ? (
         <div className="historical-leaderboard__list">
           {rankings.map(entry => (
             <LeaderboardRow
@@ -45,7 +52,7 @@ function HistoricalLeaderboard({ groupId, enabledGames, members }) {
               formattedScore={
                 selectedGame === 'all'
                   ? `${entry.totalPoints} pts`
-                  : `Avg: ${entry.formattedAverage}`
+                  : entry.formattedScore || `Avg: ${entry.formattedAverage}`
               }
               subtitle={
                 selectedGame === 'all'

@@ -23,7 +23,7 @@ function getMemberResults(userId) {
 }
 
 function PinnedGamesSection({ groupId, pinnedGames, members }) {
-  const { getUser } = useUsers();
+  const { getUserSync } = useUsers();
   const today = new Date().toISOString().split('T')[0];
 
   // Pre-fetch all member results (not using hooks in loops)
@@ -41,9 +41,9 @@ function PinnedGamesSection({ groupId, pinnedGames, members }) {
     const gameName = parser?.name || gameId;
 
     const membersWithResults = members.map(member => {
-      const user = getUser(member.userId);
+      const user = getUserSync(member.userId);
       const results = memberResultsMap[member.userId] || [];
-      const todayResult = results.find(r => r.gameId === gameId && r.date === today);
+      const todayResult = results.find(r => r.gameId === gameId && (r.date === today || r.playDate === today));
       return { ...member, user, todayResult };
     });
 

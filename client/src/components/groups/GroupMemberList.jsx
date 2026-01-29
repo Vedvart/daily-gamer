@@ -14,7 +14,7 @@ function GroupMemberList({
   isAdmin = false,
   isPreview = false
 }) {
-  const { getUser } = useUsers();
+  const { getUserSync } = useUsers();
 
   // Sort members: admins first, then mods, then members, alphabetically within each
   const sortedMembers = [...members].sort((a, b) => {
@@ -22,8 +22,8 @@ function GroupMemberList({
     const orderDiff = roleOrder[a.role] - roleOrder[b.role];
     if (orderDiff !== 0) return orderDiff;
 
-    const userA = getUser(a.userId);
-    const userB = getUser(b.userId);
+    const userA = getUserSync(a.userId);
+    const userB = getUserSync(b.userId);
     return (userA?.displayName || '').localeCompare(userB?.displayName || '');
   });
 
@@ -41,7 +41,7 @@ function GroupMemberList({
   return (
     <div className={`group-member-list ${isPreview ? 'group-member-list--preview' : ''}`}>
       {sortedMembers.map(member => {
-        const user = getUser(member.userId);
+        const user = getUserSync(member.userId);
         if (!user) return null;
 
         const isCurrentUser = member.userId === currentUserId;

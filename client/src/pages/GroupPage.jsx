@@ -28,7 +28,8 @@ function GroupPage() {
     isModerator,
     joinGroup,
     leaveGroup,
-    isLoading
+    isLoading,
+    useApi
   } = useGroupMembership(groupId);
 
   const [showJoinModal, setShowJoinModal] = useState(false);
@@ -146,6 +147,7 @@ function GroupPage() {
               groupId={groupId}
               enabledGames={group.layout?.enabledGames || []}
               members={members}
+              useApi={useApi}
             />
           </GroupSection>
         );
@@ -157,6 +159,7 @@ function GroupPage() {
               groupId={groupId}
               enabledGames={group.layout?.enabledGames || []}
               members={members}
+              useApi={useApi}
             />
           </GroupSection>
         );

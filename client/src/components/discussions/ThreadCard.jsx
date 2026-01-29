@@ -6,14 +6,14 @@ import { getParser } from '../../parsers';
 import './ThreadCard.css';
 
 function ThreadCard({ thread, onClick }) {
-  const { getUser } = useUsers();
+  const { getUserSync } = useUsers();
 
   // Get the most recent comment
-  const lastComment = thread.comments.length > 0
+  const lastComment = thread.comments?.length > 0
     ? thread.comments[thread.comments.length - 1]
     : null;
 
-  const lastUser = lastComment ? getUser(lastComment.userId) : null;
+  const lastUser = lastComment ? getUserSync(lastComment.userId) : null;
 
   // Format the thread title based on type
   const getTitle = () => {

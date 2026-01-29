@@ -7,8 +7,8 @@ import UserAvatar from '../user/UserAvatar';
 import './CommentItem.css';
 
 function CommentItem({ comment, currentUserId, onDelete, canDelete = false }) {
-  const { getUser } = useUsers();
-  const user = getUser(comment.userId);
+  const { getUserSync } = useUsers();
+  const user = getUserSync(comment.userId);
 
   if (!user) return null;
 

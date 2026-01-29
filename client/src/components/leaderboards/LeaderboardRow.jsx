@@ -16,8 +16,8 @@ function LeaderboardRow({
   isCurrentUser,
   showAvatar = true
 }) {
-  const { getUser } = useUsers();
-  const user = getUser(userId);
+  const { getUserSync } = useUsers();
+  const user = getUserSync(userId);
 
   if (!user) return null;
 
