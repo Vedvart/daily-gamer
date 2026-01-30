@@ -168,7 +168,7 @@ npm run build        # Build client for production
 
 ## Current Status
 
-**Phase 1 MVP - Complete (localStorage version)**
+**Phase 2 - Database Migration Complete**
 
 Completed:
 - [x] Project structure (React frontend, Express backend)
@@ -179,23 +179,38 @@ Completed:
 - [x] Result parsing engine (modular plugin system for 21 games)
 - [x] User dashboard page with result input
 - [x] Today's results display grid with visual flair
-- [x] localStorage persistence for results
 - [x] Average Results histograms for all 21 games
 - [x] Generate Scorecard feature (Full Text, Compact Text, Image)
 - [x] Groups feature with leaderboards, discussions, and customizable layouts
 - [x] Demo user system (20 users with generated results for testing)
 - [x] User profile pages (/user/:userId)
+- [x] PostgreSQL database on Railway
+- [x] Database schema with migrations (users, game_results, groups, group_members, discussion_threads, comments)
+- [x] API endpoints for all CRUD operations
+- [x] Frontend hooks migrated to use API with localStorage fallback
+
+**Known Bug - Navigation Issue (Priority: High)**
+- **Issue**: After entering the "NYT Puzzle Squad" group page, navigation to other pages fails - URL changes but group page content remains displayed
+- **Scope**: Only affects the seeded/demo "NYT Puzzle Squad" group; manually created groups work fine
+- **Attempted fixes that did NOT resolve the issue**:
+  1. Using `getGroupSync()` instead of async `getGroup()` in render path
+  2. Adding ErrorBoundary with `key={location.pathname}` to force remount
+  3. Adding `isMounted` cleanup pattern to all async useEffect hooks
+- **Likely cause**: Something specific to the seeded group data structure differs from API-created groups. Investigate:
+  - Compare data structure of seeded group vs API-created group
+  - Check `dummyGroups.js` for any properties that might cause issues
+  - Look for property name mismatches (e.g., `joinPolicy` vs `membership.type`, `trackedGames` vs `enabledGames`)
+  - The group might have malformed data that causes an error during render
 
 In Progress:
-- [ ] Add PostgreSQL database to Railway
+- [ ] Fix navigation bug for seeded groups
 - [ ] Build authentication system
 
 ## Next Steps
 
-1. Add PostgreSQL database to Railway project
+1. **Fix navigation bug** - Debug why "NYT Puzzle Squad" group causes navigation issues
 2. Build authentication system (email/password first, then OAuth)
-3. Migrate localStorage to database storage
-4. Add historical stats and streak tracking
+3. Add historical stats and streak tracking
 
 ---
 
