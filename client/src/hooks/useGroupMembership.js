@@ -18,6 +18,8 @@ function useGroupMembership(groupId) {
 
   // Load membership data
   useEffect(() => {
+    let isMounted = true;
+
     if (!groupId) {
       setMembers([]);
       setPendingInvites([]);
@@ -29,6 +31,8 @@ function useGroupMembership(groupId) {
       // Try API first
       try {
         const apiMembers = await groupsApi.getMembers(groupId);
+        if (!isMounted) return;
+
         if (apiMembers) {
           // Transform API response to match expected format
           const transformed = apiMembers.map(m => ({
@@ -43,15 +47,20 @@ function useGroupMembership(groupId) {
           // Also load invites
           try {
             const invites = await groupsApi.getInvites(groupId);
-            setPendingInvites(invites || []);
+            if (isMounted) {
+              setPendingInvites(invites || []);
+            }
           } catch {
             // Invites might not be accessible to non-admins
           }
 
-          setIsLoading(false);
+          if (isMounted) {
+            setIsLoading(false);
+          }
           return;
         }
       } catch (e) {
+        if (!isMounted) return;
         console.log('API not available for membership, using localStorage:', e.message);
       }
 
@@ -60,22 +69,34 @@ function useGroupMembership(groupId) {
         const stored = localStorage.getItem(storageKey);
         if (stored) {
           const data = JSON.parse(stored);
-          setMembers(data.members || []);
-          setPendingInvites(data.pendingInvites || []);
+          if (isMounted) {
+            setMembers(data.members || []);
+            setPendingInvites(data.pendingInvites || []);
+          }
         } else {
-          setMembers([]);
-          setPendingInvites([]);
+          if (isMounted) {
+            setMembers([]);
+            setPendingInvites([]);
+          }
         }
       } catch (e) {
         console.error('Failed to load group membership:', e);
-        setMembers([]);
-        setPendingInvites([]);
+        if (isMounted) {
+          setMembers([]);
+          setPendingInvites([]);
+        }
       }
 
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
 
     loadMembership();
+
+    return () => {
+      isMounted = false;
+    };
   }, [groupId, storageKey]);
 
   // Save membership data to localStorage (fallback mode only)

@@ -14,10 +14,14 @@ function useGroups() {
 
   // Load groups on mount
   useEffect(() => {
+    let isMounted = true;
+
     async function loadGroups() {
       // Try API first
       try {
         const apiGroups = await groupsApi.list({ limit: 100 });
+        if (!isMounted) return;
+
         if (apiGroups && apiGroups.length > 0) {
           setGroups(apiGroups);
           setUseApi(true);
@@ -25,6 +29,7 @@ function useGroups() {
           return;
         }
       } catch (e) {
+        if (!isMounted) return;
         console.log('API not available for groups, using localStorage:', e.message);
       }
 
@@ -32,10 +37,14 @@ function useGroups() {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
-          setGroups(JSON.parse(stored));
+          if (isMounted) {
+            setGroups(JSON.parse(stored));
+          }
         } else {
           // Initialize with dummy groups
-          setGroups(dummyGroups);
+          if (isMounted) {
+            setGroups(dummyGroups);
+          }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(dummyGroups));
 
           // Also initialize group memberships
@@ -48,13 +57,21 @@ function useGroups() {
         }
       } catch (e) {
         console.error('Failed to load groups:', e);
-        setGroups(dummyGroups);
+        if (isMounted) {
+          setGroups(dummyGroups);
+        }
       }
 
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
 
     loadGroups();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Save groups to localStorage whenever they change (fallback mode only)

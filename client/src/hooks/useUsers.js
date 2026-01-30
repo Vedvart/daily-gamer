@@ -14,10 +14,14 @@ function useUsers() {
 
   // Load users on mount
   useEffect(() => {
+    let isMounted = true;
+
     async function loadUsers() {
       // Try API first
       try {
         const apiUsers = await userApi.list(500);
+        if (!isMounted) return;
+
         if (apiUsers && apiUsers.length > 0) {
           setUsers(apiUsers);
           setUseApi(true);
@@ -25,6 +29,7 @@ function useUsers() {
           return;
         }
       } catch (e) {
+        if (!isMounted) return;
         console.log('API not available for users, using localStorage:', e.message);
       }
 
@@ -32,21 +37,33 @@ function useUsers() {
       try {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
-          setUsers(JSON.parse(stored));
+          if (isMounted) {
+            setUsers(JSON.parse(stored));
+          }
         } else {
           // Initialize with dummy users if no data exists
-          setUsers(dummyUsers);
+          if (isMounted) {
+            setUsers(dummyUsers);
+          }
           localStorage.setItem(STORAGE_KEY, JSON.stringify(dummyUsers));
         }
       } catch (e) {
         console.error('Failed to load users:', e);
-        setUsers(dummyUsers);
+        if (isMounted) {
+          setUsers(dummyUsers);
+        }
       }
 
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
 
     loadUsers();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Get a user by ID

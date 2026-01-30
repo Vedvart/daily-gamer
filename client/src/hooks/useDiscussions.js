@@ -17,6 +17,8 @@ function useDiscussions(groupId) {
 
   // Load discussions
   useEffect(() => {
+    let isMounted = true;
+
     if (!groupId) {
       setThreads([]);
       setIsLoading(false);
@@ -27,6 +29,8 @@ function useDiscussions(groupId) {
       // Try API first
       try {
         const apiThreads = await discussionsApi.getThreads(groupId, { limit: 100 });
+        if (!isMounted) return;
+
         if (apiThreads) {
           setThreads(apiThreads);
           setUseApi(true);
@@ -34,6 +38,7 @@ function useDiscussions(groupId) {
           return;
         }
       } catch (e) {
+        if (!isMounted) return;
         console.log('API not available for discussions, using localStorage:', e.message);
       }
 
@@ -42,20 +47,32 @@ function useDiscussions(groupId) {
         const stored = localStorage.getItem(storageKey);
         if (stored) {
           const data = JSON.parse(stored);
-          setThreads(data.threads || []);
+          if (isMounted) {
+            setThreads(data.threads || []);
+          }
         } else {
           // Initialize with empty threads
-          setThreads([]);
+          if (isMounted) {
+            setThreads([]);
+          }
         }
       } catch (e) {
         console.error('Failed to load discussions:', e);
-        setThreads([]);
+        if (isMounted) {
+          setThreads([]);
+        }
       }
 
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
 
     loadDiscussions();
+
+    return () => {
+      isMounted = false;
+    };
   }, [groupId, storageKey]);
 
   // Save discussions to localStorage (fallback mode only)

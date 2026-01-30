@@ -33,14 +33,20 @@ function PinnedGamesSection({ groupId, pinnedGames, members, useApi = false }) {
 
   // Load results for all pinned games
   useEffect(() => {
+    let isMounted = true;
+
     async function loadResults() {
       if (!members.length || !pinnedGames.length) {
-        setGameResults({});
-        setIsLoading(false);
+        if (isMounted) {
+          setGameResults({});
+          setIsLoading(false);
+        }
         return;
       }
 
-      setIsLoading(true);
+      if (isMounted) {
+        setIsLoading(true);
+      }
       const results = {};
 
       if (useApi) {
@@ -86,11 +92,17 @@ function PinnedGamesSection({ groupId, pinnedGames, members, useApi = false }) {
         });
       }
 
-      setGameResults(results);
-      setIsLoading(false);
+      if (isMounted) {
+        setGameResults(results);
+        setIsLoading(false);
+      }
     }
 
     loadResults();
+
+    return () => {
+      isMounted = false;
+    };
   }, [members, pinnedGames, today, useApi]);
 
   // Build game data with results

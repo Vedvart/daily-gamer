@@ -94,6 +94,8 @@ function useGameResults(userId = null, readOnly = false) {
 
   // Load results on mount or when userId changes
   useEffect(() => {
+    let isMounted = true;
+
     // Reset results when switching users
     if (prevStorageKey.current !== storageKey) {
       setResults([]);
@@ -102,13 +104,17 @@ function useGameResults(userId = null, readOnly = false) {
 
     async function loadResults() {
       if (!userId) {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
         return;
       }
 
       // Try API first
       try {
         const apiResults = await resultsApi.list({ userId, limit: 500 });
+        if (!isMounted) return;
+
         if (apiResults) {
           // Normalize API results to match parser format
           setResults(apiResults);
@@ -117,6 +123,7 @@ function useGameResults(userId = null, readOnly = false) {
           return;
         }
       } catch (e) {
+        if (!isMounted) return;
         console.log('API not available for results, using localStorage:', e.message);
       }
 
@@ -125,16 +132,24 @@ function useGameResults(userId = null, readOnly = false) {
         const stored = localStorage.getItem(storageKey);
         if (stored) {
           const parsed = JSON.parse(stored);
-          setResults(parsed.results || []);
+          if (isMounted) {
+            setResults(parsed.results || []);
+          }
         }
       } catch (e) {
         console.error('Failed to load results from localStorage:', e);
       }
 
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
 
     loadResults();
+
+    return () => {
+      isMounted = false;
+    };
   }, [userId, storageKey]);
 
   // Save results to localStorage whenever they change (fallback mode only)

@@ -21,10 +21,14 @@ export function CurrentUserProvider({ children }) {
 
   // Initialize on mount
   useEffect(() => {
+    let isMounted = true;
+
     async function init() {
       // Try to load users from API first
       try {
         const apiUsers = await userApi.list(100);
+        if (!isMounted) return;
+
         if (apiUsers && apiUsers.length > 0) {
           setAvailableUsers(apiUsers);
           setUseApi(true);
@@ -36,6 +40,7 @@ export function CurrentUserProvider({ children }) {
           setAvailableUsers(dummyUsers);
         }
       } catch (e) {
+        if (!isMounted) return;
         console.log('API not available, using localStorage:', e.message);
         // Fall back to localStorage
         if (!isSeeded()) {
@@ -49,12 +54,15 @@ export function CurrentUserProvider({ children }) {
         const stored = localStorage.getItem(STORAGE_KEY);
         if (stored) {
           const { userId, isDemo: demoMode } = JSON.parse(stored);
-          setCurrentUserId(userId);
-          setIsDemo(demoMode ?? true);
+          if (isMounted) {
+            setCurrentUserId(userId);
+            setIsDemo(demoMode ?? true);
+          }
 
           // Try to load user from API
           try {
             const user = await userApi.getById(userId);
+            if (!isMounted) return;
             if (user) {
               setCurrentUser(user);
               setIsLoading(false);
@@ -63,6 +71,8 @@ export function CurrentUserProvider({ children }) {
           } catch {
             // Fallback to dummy users
           }
+
+          if (!isMounted) return;
 
           // Find user in available users
           const users = dummyUsers;
@@ -74,8 +84,10 @@ export function CurrentUserProvider({ children }) {
         } else {
           // Set default user
           const defaultUser = dummyUsers[0];
-          setCurrentUserId(defaultUser.id);
-          setCurrentUser(defaultUser);
+          if (isMounted) {
+            setCurrentUserId(defaultUser.id);
+            setCurrentUser(defaultUser);
+          }
           localStorage.setItem(STORAGE_KEY, JSON.stringify({
             userId: defaultUser.id,
             isDemo: true
@@ -83,14 +95,22 @@ export function CurrentUserProvider({ children }) {
         }
       } catch (e) {
         console.error('Failed to load current user:', e);
-        setCurrentUserId(dummyUsers[0].id);
-        setCurrentUser(dummyUsers[0]);
+        if (isMounted) {
+          setCurrentUserId(dummyUsers[0].id);
+          setCurrentUser(dummyUsers[0]);
+        }
       }
 
-      setIsLoading(false);
+      if (isMounted) {
+        setIsLoading(false);
+      }
     }
 
     init();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   // Switch to a different user
