@@ -1,5 +1,6 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CurrentUserProvider } from './hooks/useCurrentUser';
+import ErrorBoundary from './components/ErrorBoundary';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -10,20 +11,32 @@ import GroupPage from './pages/GroupPage';
 import GroupSettingsPage from './pages/GroupSettingsPage';
 import './App.css';
 
+// Separate component to use useLocation hook
+function AppRoutes() {
+  const location = useLocation();
+
+  return (
+    // Key on pathname forces error boundary to reset on navigation
+    <ErrorBoundary key={location.pathname}>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        <Route path="/dashboard" element={<UserPage />} />
+        <Route path="/user/:userId" element={<UserProfilePage />} />
+        <Route path="/groups" element={<GroupsListPage />} />
+        <Route path="/group/:groupId" element={<GroupPage />} />
+        <Route path="/group/:groupId/settings" element={<GroupSettingsPage />} />
+      </Routes>
+    </ErrorBoundary>
+  );
+}
+
 function App() {
   return (
     <CurrentUserProvider>
       <BrowserRouter>
         <div className="app">
           <Header />
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/dashboard" element={<UserPage />} />
-            <Route path="/user/:userId" element={<UserProfilePage />} />
-            <Route path="/groups" element={<GroupsListPage />} />
-            <Route path="/group/:groupId" element={<GroupPage />} />
-            <Route path="/group/:groupId/settings" element={<GroupSettingsPage />} />
-          </Routes>
+          <AppRoutes />
           <Footer />
         </div>
       </BrowserRouter>
