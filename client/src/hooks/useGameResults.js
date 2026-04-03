@@ -1,50 +1,18 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { resultsApi } from '../utils/api';
+import { useState, useEffect, useCallback } from 'react';
 
-// Get storage key for a user's results
-function getStorageKey(userId) {
-  if (userId) {
-    return `dailygamer_results_${userId}`;
-  }
-  return 'dailygamer_results';
-}
+const STORAGE_KEY = 'dailygamer_results';
 
-// Normalize result properties between API format and parser format
-// API returns: scoreDisplay, isFailed, playDate
-// Parsers return: score, won, date, grid
-function normalizeResult(r) {
-  if (!r) return r;
-  return {
-    ...r,
-    // Map API properties to parser format
-    score: r.score || r.scoreDisplay,
-    won: r.won !== undefined ? r.won : !r.isFailed,
-    date: r.date || r.playDate,
-    // Preserve grid if available, or extract from rawText if possible
-    grid: r.grid || extractGridFromRawText(r.rawText, r.gameId),
-    // Keep both property names for compatibility
-    scoreDisplay: r.scoreDisplay || r.score,
-    isFailed: r.isFailed !== undefined ? r.isFailed : !r.won,
-    playDate: r.playDate || r.date,
-  };
-}
-
-// Extract emoji grid from raw text for display
 function extractGridFromRawText(rawText, gameId) {
   if (!rawText) return null;
-
   const lines = rawText.split('\n');
 
-  // Different games have different grid patterns
   if (gameId === 'wordle' || gameId === 'bandle') {
-    // Look for lines with only emoji squares
     const gridLines = lines.filter(line => {
       const trimmed = line.trim();
       return trimmed.length > 0 && /^[🟩🟨⬛⬜🟧🎸🎹🎺🎷🪘🎻\s]+$/.test(trimmed);
     });
     return gridLines.length > 0 ? gridLines.join('\n') : null;
   }
-
   if (gameId === 'connections') {
     const gridLines = lines.filter(line => {
       const trimmed = line.trim();
@@ -52,7 +20,6 @@ function extractGridFromRawText(rawText, gameId) {
     });
     return gridLines.length > 0 ? gridLines.join('\n') : null;
   }
-
   if (gameId === 'strands') {
     const gridLines = lines.filter(line => {
       const trimmed = line.trim();
@@ -60,7 +27,6 @@ function extractGridFromRawText(rawText, gameId) {
     });
     return gridLines.length > 0 ? gridLines.join('\n') : null;
   }
-
   if (gameId === 'catfishing') {
     const gridLines = lines.filter(line => {
       const trimmed = line.trim();
@@ -68,238 +34,84 @@ function extractGridFromRawText(rawText, gameId) {
     });
     return gridLines.length > 0 ? gridLines.join('\n') : null;
   }
-
-  // For other games, look for any line that's mostly emojis
   const gridLines = lines.filter(line => {
     const trimmed = line.trim();
-    // Check if line has emojis and minimal text
     const emojiCount = (trimmed.match(/[\u{1F300}-\u{1F9FF}]/gu) || []).length;
     return emojiCount >= 2;
   });
-
   return gridLines.length > 0 ? gridLines.join('\n') : null;
 }
 
-/**
- * Custom hook for managing game results with API or localStorage persistence
- * @param {string} userId - Optional user ID. If provided, loads that user's results.
- * @param {boolean} readOnly - If true, results cannot be modified (for viewing other users)
- */
-function useGameResults(userId = null, readOnly = false) {
-  const [results, setResults] = useState([]);
-  const [useApi, setUseApi] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const storageKey = getStorageKey(userId);
-  const prevStorageKey = useRef(storageKey);
+function loadFromStorage() {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      return parsed.results || [];
+    }
+  } catch (e) {
+    console.error('Failed to load results from localStorage:', e);
+  }
+  return [];
+}
 
-  // Load results on mount or when userId changes
+function useGameResults() {
+  const [results, setResults] = useState(() => loadFromStorage());
+
   useEffect(() => {
-    let isMounted = true;
-
-    // Reset results when switching users
-    if (prevStorageKey.current !== storageKey) {
-      setResults([]);
-      prevStorageKey.current = storageKey;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ results }));
+    } catch (e) {
+      console.error('Failed to save results to localStorage:', e);
     }
+  }, [results]);
 
-    async function loadResults() {
-      if (!userId) {
-        if (isMounted) {
-          setIsLoading(false);
-        }
-        return;
-      }
-
-      // Try API first
-      try {
-        const apiResults = await resultsApi.list({ userId, limit: 500 });
-        if (!isMounted) return;
-
-        if (apiResults) {
-          // Normalize API results to match parser format
-          setResults(apiResults);
-          setUseApi(true);
-          setIsLoading(false);
-          return;
-        }
-      } catch (e) {
-        if (!isMounted) return;
-        console.log('API not available for results, using localStorage:', e.message);
-      }
-
-      // Fall back to localStorage
-      try {
-        const stored = localStorage.getItem(storageKey);
-        if (stored) {
-          const parsed = JSON.parse(stored);
-          if (isMounted) {
-            setResults(parsed.results || []);
-          }
-        }
-      } catch (e) {
-        console.error('Failed to load results from localStorage:', e);
-      }
-
-      if (isMounted) {
-        setIsLoading(false);
-      }
-    }
-
-    loadResults();
-
-    return () => {
-      isMounted = false;
-    };
-  }, [userId, storageKey]);
-
-  // Save results to localStorage whenever they change (fallback mode only)
-  useEffect(() => {
-    // Only save if not in read-only mode and not using API
-    if (!readOnly && !useApi && results.length > 0) {
-      try {
-        localStorage.setItem(storageKey, JSON.stringify({ results }));
-      } catch (e) {
-        console.error('Failed to save results to localStorage:', e);
-      }
-    }
-  }, [results, storageKey, readOnly, useApi]);
-
-  // Get today's date in YYYY-MM-DD format
   const getToday = useCallback(() => {
     return new Date().toISOString().split('T')[0];
   }, []);
 
-  // Filter results for today
   const todayResults = results.filter(r => {
     const resultDate = r.playDate || r.date;
     return resultDate === getToday();
   });
 
-  // Add a new result (prevents duplicates based on gameId + puzzleNumber)
-  const addResult = useCallback(async (result) => {
-    // Don't allow adding results in read-only mode
-    if (readOnly) {
-      console.warn('Cannot add results in read-only mode');
-      return;
-    }
-
-    // Try API first
-    if (useApi) {
-      try {
-        const apiResult = await resultsApi.create({
-          userId: userId,
-          gameId: result.gameId,
-          puzzleNumber: result.puzzleNumber,
-          playDate: result.date,
-          rawText: result.rawText,
-          scoreValue: result.scoreValue,
-          scoreDisplay: result.scoreDisplay || result.score,
-          isFailed: !result.won,
-          isGreat: result.isGreat,
-          achievement: result.isReversePerfect ? 'reverse_perfect' :
-                       result.isPurpleFirst ? 'purple_first' : null,
-          extraData: result.extraData || null,
-        });
-
-        // Update local state with normalized result
-        const normalized = normalizeResult(apiResult);
-        setResults(prev => {
-          const existingIndex = prev.findIndex(
-            r => r.gameId === result.gameId && r.puzzleNumber === result.puzzleNumber
-          );
-          if (existingIndex !== -1) {
-            const updated = [...prev];
-            updated[existingIndex] = normalized;
-            return updated;
-          }
-          return [...prev, normalized];
-        });
-        return;
-      } catch (e) {
-        console.error('Failed to save result to API:', e.message);
-        // Fall through to local storage
-      }
-    }
-
-    // Local storage fallback
+  const addResult = useCallback((result) => {
     setResults(prev => {
-      // Check for duplicate
       const existingIndex = prev.findIndex(
         r => r.gameId === result.gameId && r.puzzleNumber === result.puzzleNumber
       );
-
       if (existingIndex !== -1) {
-        // Replace existing result
         const updated = [...prev];
         updated[existingIndex] = result;
         return updated;
       }
-
-      // Add new result
       return [...prev, result];
     });
-  }, [readOnly, useApi, userId]);
+  }, []);
 
-  // Remove a result by ID
-  const removeResult = useCallback(async (id) => {
-    if (readOnly) {
-      console.warn('Cannot remove results in read-only mode');
-      return;
-    }
-
-    // Try API first
-    if (useApi) {
-      try {
-        await resultsApi.delete(id);
-      } catch (e) {
-        console.error('Failed to delete result from API:', e.message);
-      }
-    }
-
+  const removeResult = useCallback((id) => {
     setResults(prev => prev.filter(r => r.id !== id));
-  }, [readOnly, useApi]);
+  }, []);
 
-  // Get stats for a specific game
   const getStats = useCallback((gameId) => {
     const gameResults = results.filter(r => r.gameId === gameId);
-
     if (gameResults.length === 0) {
-      return {
-        totalPlayed: 0,
-        wins: 0,
-        averageScore: null,
-        bestScore: null,
-        currentStreak: 0,
-        longestStreak: 0,
-      };
+      return { totalPlayed: 0, wins: 0, averageScore: null, bestScore: null, currentStreak: 0, longestStreak: 0 };
     }
-
     const wins = gameResults.filter(r => r.won || !r.isFailed).length;
-
-    // Calculate average (for time-based games like Mini, lower is better)
-    const isTimeBased = gameId === 'mini';
+    const isTimeBased = gameId === 'mini' || gameId === 'latimesmini';
     const scores = gameResults.map(r => r.scoreValue).filter(s => s != null);
     const averageScore = scores.length > 0
       ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
       : null;
-
-    // Calculate best score
     let bestScore = null;
     if (scores.length > 0) {
-      bestScore = isTimeBased
-        ? Math.min(...scores) // Lower is better for time
-        : Math.max(...scores); // Higher is better for score
+      bestScore = isTimeBased ? Math.min(...scores) : Math.max(...scores);
     }
-
-    // Calculate streaks (simplified - based on consecutive wins)
     const sortedResults = [...gameResults].sort((a, b) =>
       new Date(b.playDate || b.date) - new Date(a.playDate || a.date)
     );
-
-    let currentStreak = 0;
-    let longestStreak = 0;
-    let tempStreak = 0;
-
+    let currentStreak = 0, longestStreak = 0, tempStreak = 0;
     for (const result of sortedResults) {
       const isWin = result.won || !result.isFailed;
       if (isWin) {
@@ -311,46 +123,33 @@ function useGameResults(userId = null, readOnly = false) {
         tempStreak = 0;
       }
     }
-
-    return {
-      totalPlayed: gameResults.length,
-      wins,
-      averageScore,
-      bestScore,
-      currentStreak,
-      longestStreak,
-    };
+    return { totalPlayed: gameResults.length, wins, averageScore, bestScore, currentStreak, longestStreak };
   }, [results]);
 
-  // Get result for a specific game and date
   const getResultForDate = useCallback((gameId, date) => {
     return results.find(r => r.gameId === gameId && (r.playDate === date || r.date === date));
   }, [results]);
 
-  // ============ HISTOGRAM FUNCTIONS ============
-  // Note: Results are already normalized when loaded, so we can use them directly
+  const clearAll = useCallback(() => {
+    setResults([]);
+    localStorage.removeItem(STORAGE_KEY);
+  }, []);
 
-  // Get histogram data for Wordle (score distribution 1-6, X)
+  // ============ HISTOGRAM FUNCTIONS ============
+
   const getWordleHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'wordle');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
-
     gameResults.forEach(r => {
-      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) {
-        histogram[r.scoreValue]++;
-      } else {
-        histogram['X']++;
-      }
+      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) histogram[r.scoreValue]++;
+      else histogram['X']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Connections (includes Reverse Perfect and Purple First)
   const getConnectionsHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'connections');
     const histogram = { 'RP': 0, 'PF': 0, 0: 0, 1: 0, 2: 0, 3: 0, 'X': 0 };
-
     gameResults.forEach(r => {
       const achievement = r.achievement || (r.isReversePerfect ? 'reverse_perfect' : r.isPurpleFirst ? 'purple_first' : null);
       if (!r.won) {
@@ -360,410 +159,301 @@ function useGameResults(userId = null, readOnly = false) {
       } else if (achievement === 'purple_first' || r.isPurpleFirst) {
         histogram['PF']++;
       } else {
-        // scoreValue is 4 - mistakes, so mistakes = 4 - scoreValue
         const mistakes = 4 - r.scoreValue;
-        if (mistakes >= 0 && mistakes <= 3) {
-          histogram[mistakes]++;
-        } else {
-          histogram[0]++;
-        }
+        if (mistakes >= 0 && mistakes <= 3) histogram[mistakes]++;
+        else histogram[0]++;
       }
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for NYT Mini (time buckets)
   const getMiniHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'mini');
     const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
-
     gameResults.forEach(r => {
-      const seconds = r.scoreValue; // scoreValue is time in seconds
-      if (seconds < 30) {
-        histogram['<30s']++;
-      } else if (seconds < 60) {
-        histogram['30-60s']++;
-      } else if (seconds < 120) {
-        histogram['1-2m']++;
-      } else if (seconds < 180) {
-        histogram['2-3m']++;
-      } else {
-        histogram['3m+']++;
-      }
+      const s = r.scoreValue;
+      if (s < 30) histogram['<30s']++;
+      else if (s < 60) histogram['30-60s']++;
+      else if (s < 120) histogram['1-2m']++;
+      else if (s < 180) histogram['2-3m']++;
+      else histogram['3m+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Bandle (score distribution 1-6, X)
   const getBandleHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'bandle');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
-
     gameResults.forEach(r => {
-      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) {
-        histogram[r.scoreValue]++;
-      } else {
-        histogram['X']++;
-      }
+      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) histogram[r.scoreValue]++;
+      else histogram['X']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Catfishing (half-point increments 0, 0.5, 1, 1.5, ... 10)
   const getCatfishingHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'catfishing');
-    // Initialize all half-point buckets
     const histogram = {};
-    for (let i = 0; i <= 20; i++) {
-      histogram[i / 2] = 0;
-    }
-
+    for (let i = 0; i <= 20; i++) histogram[i / 2] = 0;
     gameResults.forEach(r => {
-      const score = r.scoreValue;
-      // Round to nearest 0.5
-      const bucket = Math.round(score * 2) / 2;
-      if (bucket >= 0 && bucket <= 10) {
-        histogram[bucket]++;
-      }
+      const bucket = Math.round(r.scoreValue * 2) / 2;
+      if (bucket >= 0 && bucket <= 10) histogram[bucket]++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for TimeGuessr (5k point buckets)
   const getTimeguessrHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'timeguessr');
     const histogram = {
       '0-5k': 0, '5-10k': 0, '10-15k': 0, '15-20k': 0, '20-25k': 0,
-      '25-30k': 0, '30-35k': 0, '35-40k': 0, '40-45k': 0, '45-50k': 0
+      '25-30k': 0, '30-35k': 0, '35-40k': 0, '40-45k': 0, '45-50k': 0,
     };
-
     gameResults.forEach(r => {
-      const score = r.scoreValue;
-      if (score < 5000) histogram['0-5k']++;
-      else if (score < 10000) histogram['5-10k']++;
-      else if (score < 15000) histogram['10-15k']++;
-      else if (score < 20000) histogram['15-20k']++;
-      else if (score < 25000) histogram['20-25k']++;
-      else if (score < 30000) histogram['25-30k']++;
-      else if (score < 35000) histogram['30-35k']++;
-      else if (score < 40000) histogram['35-40k']++;
-      else if (score < 45000) histogram['40-45k']++;
+      const s = r.scoreValue;
+      if (s < 5000) histogram['0-5k']++;
+      else if (s < 10000) histogram['5-10k']++;
+      else if (s < 15000) histogram['10-15k']++;
+      else if (s < 20000) histogram['15-20k']++;
+      else if (s < 25000) histogram['20-25k']++;
+      else if (s < 30000) histogram['25-30k']++;
+      else if (s < 35000) histogram['30-35k']++;
+      else if (s < 40000) histogram['35-40k']++;
+      else if (s < 45000) histogram['40-45k']++;
       else histogram['45-50k']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Strands (hints used)
   const getStrandsHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'strands');
     const histogram = { 0: 0, 1: 0, 2: 0, 3: 0, '4+': 0 };
-
     gameResults.forEach(r => {
-      const hints = r.scoreValue || 0;
-      if (hints === 0) histogram[0]++;
-      else if (hints === 1) histogram[1]++;
-      else if (hints === 2) histogram[2]++;
-      else if (hints === 3) histogram[3]++;
+      const h = r.scoreValue || 0;
+      if (h <= 3) histogram[h]++;
       else histogram['4+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for LA Times Mini (same as NYT Mini - time buckets)
   const getLatimesMiniHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'latimesmini');
     const histogram = { '<30s': 0, '30-60s': 0, '1-2m': 0, '2-3m': 0, '3m+': 0 };
-
     gameResults.forEach(r => {
-      const seconds = r.scoreValue;
-      if (seconds < 30) histogram['<30s']++;
-      else if (seconds < 60) histogram['30-60s']++;
-      else if (seconds < 120) histogram['1-2m']++;
-      else if (seconds < 180) histogram['2-3m']++;
+      const s = r.scoreValue;
+      if (s < 30) histogram['<30s']++;
+      else if (s < 60) histogram['30-60s']++;
+      else if (s < 120) histogram['1-2m']++;
+      else if (s < 180) histogram['2-3m']++;
       else histogram['3m+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Travle (extra guesses)
   const getTravleHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'travle');
     const histogram = { '+0': 0, '+1': 0, '+2': 0, '+3': 0, '+4': 0, '+5+': 0 };
-
     gameResults.forEach(r => {
-      const extra = r.scoreValue || 0;
-      if (extra === 0) histogram['+0']++;
-      else if (extra === 1) histogram['+1']++;
-      else if (extra === 2) histogram['+2']++;
-      else if (extra === 3) histogram['+3']++;
-      else if (extra === 4) histogram['+4']++;
+      const e = r.scoreValue || 0;
+      if (e === 0) histogram['+0']++;
+      else if (e === 1) histogram['+1']++;
+      else if (e === 2) histogram['+2']++;
+      else if (e === 3) histogram['+3']++;
+      else if (e === 4) histogram['+4']++;
       else histogram['+5+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Flagle (guesses 1-6, X)
   const getFlagleHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'flagle');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, X: 0 };
-
     gameResults.forEach(r => {
-      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) {
-        histogram[r.scoreValue]++;
-      } else {
-        histogram['X']++;
-      }
+      if (r.won && r.scoreValue >= 1 && r.scoreValue <= 6) histogram[r.scoreValue]++;
+      else histogram['X']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Kinda Hard Golf (strokes)
   const getKindahardgolfHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'kindahardgolf');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
-
     gameResults.forEach(r => {
-      const strokes = r.scoreValue || 0;
-      if (strokes === 1) histogram[1]++;
-      else if (strokes === 2) histogram[2]++;
-      else if (strokes === 3) histogram[3]++;
-      else if (strokes === 4) histogram[4]++;
-      else if (strokes === 5) histogram[5]++;
+      const s = r.scoreValue || 0;
+      if (s >= 1 && s <= 5) histogram[s]++;
       else histogram['6+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for enclose.horse (percentage buckets)
   const getEnclosehorseHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'enclosehorse');
     const histogram = { '0-20': 0, '21-40': 0, '41-60': 0, '61-80': 0, '81-99': 0, '100': 0 };
-
     gameResults.forEach(r => {
-      const pct = r.scoreValue || 0;
-      if (pct === 100) histogram['100']++;
-      else if (pct >= 81) histogram['81-99']++;
-      else if (pct >= 61) histogram['61-80']++;
-      else if (pct >= 41) histogram['41-60']++;
-      else if (pct >= 21) histogram['21-40']++;
+      const p = r.scoreValue || 0;
+      if (p === 100) histogram['100']++;
+      else if (p >= 81) histogram['81-99']++;
+      else if (p >= 61) histogram['61-80']++;
+      else if (p >= 41) histogram['41-60']++;
+      else if (p >= 21) histogram['21-40']++;
       else histogram['0-20']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Kickoff League (kicks)
   const getKickoffleagueHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'kickoffleague');
     const histogram = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, '6+': 0 };
-
     gameResults.forEach(r => {
-      const kicks = r.scoreValue || 0;
-      if (kicks === 1) histogram[1]++;
-      else if (kicks === 2) histogram[2]++;
-      else if (kicks === 3) histogram[3]++;
-      else if (kicks === 4) histogram[4]++;
-      else if (kicks === 5) histogram[5]++;
+      const k = r.scoreValue || 0;
+      if (k >= 1 && k <= 5) histogram[k]++;
       else histogram['6+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Scrandle (score out of 10)
   const getScrandleHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'scrandle');
     const histogram = {};
     for (let i = 0; i <= 10; i++) histogram[i] = 0;
-
     gameResults.forEach(r => {
-      const score = Math.min(10, Math.max(0, r.scoreValue || 0));
-      histogram[Math.round(score)]++;
+      histogram[Math.round(Math.min(10, Math.max(0, r.scoreValue || 0)))]++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for One Up Puzzle (time buckets)
   const getOneuppuzzleHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'oneuppuzzle');
     const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
-
     gameResults.forEach(r => {
-      const seconds = r.scoreValue || 0;
-      if (seconds < 60) histogram['<1m']++;
-      else if (seconds < 120) histogram['1-2m']++;
-      else if (seconds < 300) histogram['2-5m']++;
-      else if (seconds < 600) histogram['5-10m']++;
+      const s = r.scoreValue || 0;
+      if (s < 60) histogram['<1m']++;
+      else if (s < 120) histogram['1-2m']++;
+      else if (s < 300) histogram['2-5m']++;
+      else if (s < 600) histogram['5-10m']++;
       else histogram['10m+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Clues By Sam (time buckets)
   const getCluesbysamHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'cluesbysam');
     const histogram = { '<1m': 0, '1-2m': 0, '2-5m': 0, '5-10m': 0, '10m+': 0 };
-
     gameResults.forEach(r => {
-      const seconds = r.scoreValue || 0;
-      if (seconds < 60) histogram['<1m']++;
-      else if (seconds < 120) histogram['1-2m']++;
-      else if (seconds < 300) histogram['2-5m']++;
-      else if (seconds < 600) histogram['5-10m']++;
+      const s = r.scoreValue || 0;
+      if (s < 60) histogram['<1m']++;
+      else if (s < 120) histogram['1-2m']++;
+      else if (s < 300) histogram['2-5m']++;
+      else if (s < 600) histogram['5-10m']++;
       else histogram['10m+']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Minute Cryptic (score vs par)
   const getMinutecrypticHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'minutecryptic');
     const histogram = { '≤-2': 0, '-1': 0, '0': 0, '+1': 0, '+2': 0, '≥+3': 0 };
-
     gameResults.forEach(r => {
-      const score = r.scoreValue || 0;
-      // Assuming par is typically around 2, so score-2 gives diff
-      // But since we just have score, we'll bucket by score directly
-      if (score <= 0) histogram['≤-2']++;
-      else if (score === 1) histogram['-1']++;
-      else if (score === 2) histogram['0']++;
-      else if (score === 3) histogram['+1']++;
-      else if (score === 4) histogram['+2']++;
+      const s = r.scoreValue || 0;
+      if (s <= 0) histogram['≤-2']++;
+      else if (s === 1) histogram['-1']++;
+      else if (s === 2) histogram['0']++;
+      else if (s === 3) histogram['+1']++;
+      else if (s === 4) histogram['+2']++;
       else histogram['≥+3']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Daily Dozen (score out of 12)
   const getDailydozenHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'dailydozen');
     const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-11': 0, '12': 0 };
-
     gameResults.forEach(r => {
-      const score = r.scoreValue || 0;
-      if (score === 12) histogram['12']++;
-      else if (score >= 10) histogram['10-11']++;
-      else if (score >= 7) histogram['7-9']++;
-      else if (score >= 4) histogram['4-6']++;
+      const s = r.scoreValue || 0;
+      if (s === 12) histogram['12']++;
+      else if (s >= 10) histogram['10-11']++;
+      else if (s >= 7) histogram['7-9']++;
+      else if (s >= 4) histogram['4-6']++;
       else histogram['0-3']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for More Or Less (streak ranges)
   const getMoreorlessHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'moreorless');
     const histogram = { '1-5': 0, '6-10': 0, '11-15': 0, '16-20': 0, '21+': 0 };
-
     gameResults.forEach(r => {
-      const streak = r.scoreValue || 0;
-      if (streak >= 21) histogram['21+']++;
-      else if (streak >= 16) histogram['16-20']++;
-      else if (streak >= 11) histogram['11-15']++;
-      else if (streak >= 6) histogram['6-10']++;
+      const s = r.scoreValue || 0;
+      if (s >= 21) histogram['21+']++;
+      else if (s >= 16) histogram['16-20']++;
+      else if (s >= 11) histogram['11-15']++;
+      else if (s >= 6) histogram['6-10']++;
       else histogram['1-5']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Eruptle (score out of 10)
   const getEruptleHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'eruptle');
     const histogram = {};
     for (let i = 0; i <= 10; i++) histogram[i] = 0;
-
     gameResults.forEach(r => {
-      const score = Math.min(10, Math.max(0, r.scoreValue || 0));
-      histogram[Math.round(score)]++;
+      histogram[Math.round(Math.min(10, Math.max(0, r.scoreValue || 0)))]++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get histogram data for Thrice (points 0-15)
   const getThriceHistogram = useCallback(() => {
     const gameResults = results.filter(r => r.gameId === 'thrice');
     const histogram = { '0-3': 0, '4-6': 0, '7-9': 0, '10-12': 0, '13-15': 0 };
-
     gameResults.forEach(r => {
-      const points = r.scoreValue || 0;
-      if (points >= 13) histogram['13-15']++;
-      else if (points >= 10) histogram['10-12']++;
-      else if (points >= 7) histogram['7-9']++;
-      else if (points >= 4) histogram['4-6']++;
+      const p = r.scoreValue || 0;
+      if (p >= 13) histogram['13-15']++;
+      else if (p >= 10) histogram['10-12']++;
+      else if (p >= 7) histogram['7-9']++;
+      else if (p >= 4) histogram['4-6']++;
       else histogram['0-3']++;
     });
-
     return histogram;
   }, [results]);
 
-  // Get all histogram data at once
-  const getAllHistograms = useCallback(() => {
-    return {
-      wordle: getWordleHistogram(),
-      connections: getConnectionsHistogram(),
-      strands: getStrandsHistogram(),
-      mini: getMiniHistogram(),
-      latimesmini: getLatimesMiniHistogram(),
-      bandle: getBandleHistogram(),
-      catfishing: getCatfishingHistogram(),
-      timeguessr: getTimeguessrHistogram(),
-      travle: getTravleHistogram(),
-      flagle: getFlagleHistogram(),
-      kindahardgolf: getKindahardgolfHistogram(),
-      enclosehorse: getEnclosehorseHistogram(),
-      kickoffleague: getKickoffleagueHistogram(),
-      scrandle: getScrandleHistogram(),
-      oneuppuzzle: getOneuppuzzleHistogram(),
-      cluesbysam: getCluesbysamHistogram(),
-      minutecryptic: getMinutecrypticHistogram(),
-      dailydozen: getDailydozenHistogram(),
-      moreorless: getMoreorlessHistogram(),
-      eruptle: getEruptleHistogram(),
-      thrice: getThriceHistogram(),
-    };
-  }, [
+  const getAllHistograms = useCallback(() => ({
+    wordle: getWordleHistogram(),
+    connections: getConnectionsHistogram(),
+    strands: getStrandsHistogram(),
+    mini: getMiniHistogram(),
+    latimesmini: getLatimesMiniHistogram(),
+    bandle: getBandleHistogram(),
+    catfishing: getCatfishingHistogram(),
+    timeguessr: getTimeguessrHistogram(),
+    travle: getTravleHistogram(),
+    flagle: getFlagleHistogram(),
+    kindahardgolf: getKindahardgolfHistogram(),
+    enclosehorse: getEnclosehorseHistogram(),
+    kickoffleague: getKickoffleagueHistogram(),
+    scrandle: getScrandleHistogram(),
+    oneuppuzzle: getOneuppuzzleHistogram(),
+    cluesbysam: getCluesbysamHistogram(),
+    minutecryptic: getMinutecrypticHistogram(),
+    dailydozen: getDailydozenHistogram(),
+    moreorless: getMoreorlessHistogram(),
+    eruptle: getEruptleHistogram(),
+    thrice: getThriceHistogram(),
+  }), [
     getWordleHistogram, getConnectionsHistogram, getStrandsHistogram, getMiniHistogram,
     getLatimesMiniHistogram, getBandleHistogram, getCatfishingHistogram, getTimeguessrHistogram,
     getTravleHistogram, getFlagleHistogram, getKindahardgolfHistogram, getEnclosehorseHistogram,
     getKickoffleagueHistogram, getScrandleHistogram, getOneuppuzzleHistogram, getCluesbysamHistogram,
     getMinutecrypticHistogram, getDailydozenHistogram, getMoreorlessHistogram, getEruptleHistogram,
-    getThriceHistogram
+    getThriceHistogram,
   ]);
 
-  // Get all games that have at least one result (for showing histograms)
   const getGamesWithResults = useCallback(() => {
-    const gameIds = new Set(results.map(r => r.gameId));
-    return Array.from(gameIds);
+    return Array.from(new Set(results.map(r => r.gameId)));
   }, [results]);
-
-  // Clear all results (for testing/reset)
-  const clearAll = useCallback(() => {
-    setResults([]);
-    localStorage.removeItem(storageKey);
-  }, [storageKey]);
 
   return {
     results,
     todayResults,
-    isLoading,
-    useApi,
     addResult,
     removeResult,
     getStats,

@@ -3,14 +3,9 @@
   "version": "1.0.0",
   "description": "A central hub for daily game results",
   "scripts": {
-    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
-    "dev:server": "cd server && npm run dev",
-    "dev:client": "cd client && npm run dev",
-    "postinstall": "cd client && npm install && cd ../server && npm install",
-    "build": "cd client && npm run build",
-    "start": "NODE_ENV=production node server/index.js",
-    "migrate": "cd server && npm run migrate",
-    "seed": "cd server && npm run seed"
+    "dev": "cd client && npm run dev",
+    "build": "cd client && npm install && npm run build",
+    "preview": "cd client && npm run preview"
   },
   "repository": {
     "type": "git",
@@ -22,8 +17,5 @@
   "bugs": {
     "url": "https://github.com/Vedvart/daily-gamer/issues"
   },
-  "homepage": "https://github.com/Vedvart/daily-gamer#readme",
-  "devDependencies": {
-    "concurrently": "^8.2.2"
-  }
+  "homepage": "https://github.com/Vedvart/daily-gamer#readme"
 }

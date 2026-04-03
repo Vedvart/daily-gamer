@@ -1,0 +1,125 @@
+.main-page {
+  flex: 1;
+  padding: 2rem;
+  width: 100%;
+}
+
+.main-page__container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.main-page__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.main-page__btn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  transition: opacity 0.15s, background-color 0.15s;
+}
+
+.main-page__btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.main-page__btn--primary {
+  background-color: var(--accent-green);
+  color: #fff;
+}
+
+.main-page__btn--primary:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.main-page__btn--secondary {
+  background-color: var(--accent-purple);
+  color: #fff;
+}
+
+.main-page__btn--secondary:hover:not(:disabled) {
+  opacity: 0.85;
+}
+
+.main-page__content {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+.main-page__section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.main-page__histograms {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+
+.main-page__empty-histograms {
+  background-color: var(--bg-card);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  border: 1px dashed var(--input-border);
+}
+
+.main-page__empty-histograms p {
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.main-page__empty-hint {
+  font-size: 0.875rem;
+  margin-top: 0.5rem !important;
+  opacity: 0.7;
+}
+
+.main-page__debug {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--input-border);
+}
+
+.main-page__debug-button {
+  padding: 0.5rem 1rem;
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--input-border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.main-page__debug-button:hover {
+  background-color: var(--error);
+  color: white;
+  border-color: var(--error);
+}
+
+@media (max-width: 800px) {
+  .main-page {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 500px) {
+  .main-page__histograms {
+    grid-template-columns: 1fr;
+  }
+
+  .main-page__actions {
+    flex-direction: column;
+  }
+}
