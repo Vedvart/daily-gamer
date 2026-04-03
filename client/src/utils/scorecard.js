@@ -107,103 +107,158 @@ export function generateCompactText(results) {
 }
 
 // Draws results onto a canvas element. Synchronous.
+// Single-column layout; each card shows the full rawText content.
 export function renderImageToCanvas(results, canvas) {
   const ctx = canvas.getContext('2d');
   const s = sorted(results);
 
-  const padding = 32;
-  const cardWidth = 280;
-  const cardHeight = 120;
-  const cardGap = 16;
-  const cols = Math.min(s.length, 3);
-  const rows = Math.ceil(s.length / 3);
+  // Layout constants
+  const outerPad  = 28;
+  const cardWidth = 500;
+  const cardGap   = 10;
+  const hPad      = 14; // horizontal padding inside card
+  const headerH   = 50; // height of the icon/name/score row
+  const divH      = 1;
+  const textSize  = 12;
+  const lineH     = 18; // px per rawText line
+  const textPadT  = 10; // padding above text block
+  const textPadB  = 10; // padding below text block
+  const maxLines  = 20; // cap to avoid absurdly tall cards
 
-  const width  = padding * 2 + cols * cardWidth + (cols - 1) * cardGap;
-  const height = padding * 2 + 60 + rows * cardHeight + (rows - 1) * cardGap;
+  // Pre-compute each card's rawText lines and resulting height
+  const cards = s.map(result => {
+    const allLines = (result.rawText || '').split('\n');
+    const displayLines = allLines.slice(0, maxLines);
+    const overflow = allLines.length - displayLines.length;
+    const textH = displayLines.length * lineH;
+    const cardH = headerH + divH + textPadT + textH + textPadB;
+    return { result, displayLines, overflow, cardH };
+  });
 
-  canvas.width  = width;
-  canvas.height = height;
+  const titleH   = 56;
+  const totalCardH = cards.reduce((sum, c, i) =>
+    sum + c.cardH + (i < cards.length - 1 ? cardGap : 0), 0);
+  const wmH      = 20; // watermark area
+  const canvasW  = outerPad * 2 + cardWidth;
+  const canvasH  = outerPad * 2 + titleH + totalCardH + wmH;
+
+  canvas.width  = canvasW;
+  canvas.height = canvasH;
 
   // Background
-  const gradient = ctx.createLinearGradient(0, 0, width, height);
-  gradient.addColorStop(0, '#1a1a2e');
-  gradient.addColorStop(1, '#16213e');
-  ctx.fillStyle = gradient;
-  ctx.fillRect(0, 0, width, height);
+  const bg = ctx.createLinearGradient(0, 0, canvasW, canvasH);
+  bg.addColorStop(0, '#1a1a2e');
+  bg.addColorStop(1, '#16213e');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, canvasW, canvasH);
 
-  // Title
+  // Title block
   const today = new Date().toLocaleDateString('en-US', {
     weekday: 'long', month: 'long', day: 'numeric',
   });
   ctx.fillStyle = '#ffffff';
-  ctx.font = 'bold 24px system-ui, -apple-system, sans-serif';
+  ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('Daily Games', width / 2, padding + 24);
+  ctx.fillText('Daily Games', canvasW / 2, outerPad + 22);
   ctx.fillStyle = '#9ca3af';
-  ctx.font = '14px system-ui, -apple-system, sans-serif';
-  ctx.fillText(today, width / 2, padding + 46);
+  ctx.font = '13px system-ui, -apple-system, sans-serif';
+  ctx.fillText(today, canvasW / 2, outerPad + 42);
 
   // Cards
-  s.forEach((result, i) => {
-    const col = i % 3;
-    const row = Math.floor(i / 3);
-    const cardsInRow = Math.min(3, s.length - row * 3);
-    const rowWidth = cardsInRow * cardWidth + (cardsInRow - 1) * cardGap;
-    const rowOffset = (width - padding * 2 - rowWidth) / 2;
-    const x = padding + rowOffset + col * (cardWidth + cardGap);
-    const y = padding + 60 + row * (cardHeight + cardGap);
+  let cardY = outerPad + titleH;
+  const emojiFont = `${textSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif`;
 
-    ctx.fillStyle = 'rgba(37, 37, 64, 0.9)';
+  cards.forEach(({ result, displayLines, overflow, cardH }) => {
+    const x = outerPad;
+    const y = cardY;
+    const color = gameColors[result.gameId] || '#6b7280';
+
+    // Card background
+    ctx.fillStyle = 'rgba(37, 37, 64, 0.92)';
     ctx.beginPath();
-    ctx.roundRect(x, y, cardWidth, cardHeight, 12);
+    ctx.roundRect(x, y, cardWidth, cardH, 10);
     ctx.fill();
 
-    ctx.fillStyle = gameColors[result.gameId] || '#6b7280';
-    ctx.fillRect(x, y, cardWidth, 4);
+    // Top accent bar
+    ctx.fillStyle = color;
+    ctx.fillRect(x, y, cardWidth, 3);
 
-    const iconSize = 32;
-    const iconX = x + 16;
-    const iconY = y + 20;
+    // ── Header ──────────────────────────────────────────────
+    const iconSize = 28;
+    const iconX = x + hPad;
+    const iconY = y + (headerH - iconSize) / 2;
 
-    ctx.fillStyle = gameColors[result.gameId] || '#6b7280';
+    // Icon background
+    ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.roundRect(iconX, iconY, iconSize, iconSize, 6);
+    ctx.roundRect(iconX, iconY, iconSize, iconSize, 5);
     ctx.fill();
 
+    // Icon letter
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 16px system-ui, -apple-system, sans-serif';
+    ctx.font = `bold 13px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'center';
-    ctx.fillText(result.gameId[0].toUpperCase(), iconX + iconSize / 2, iconY + 22);
+    const iconLetter = (result.gameId[0] || '?').toUpperCase();
+    ctx.fillText(iconLetter, iconX + iconSize / 2, iconY + 19);
 
+    // Game name
+    const gameLabel = gameNames[result.gameId] || result.gameName || result.gameId;
     ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
+    ctx.font = `bold 13px system-ui, -apple-system, sans-serif`;
     ctx.textAlign = 'left';
-    ctx.fillText(gameNames[result.gameId] || result.gameName || result.gameId, iconX + iconSize + 12, iconY + 14);
+    ctx.fillText(gameLabel, iconX + iconSize + 10, y + 22);
 
+    // Puzzle number
     if (result.puzzleNumber) {
       ctx.fillStyle = '#9ca3af';
-      ctx.font = '11px system-ui, -apple-system, sans-serif';
-      ctx.fillText(`#${result.puzzleNumber}`, iconX + iconSize + 12, iconY + 28);
+      ctx.font = `11px system-ui, -apple-system, sans-serif`;
+      ctx.fillText(`#${result.puzzleNumber}`, iconX + iconSize + 10, y + 37);
     }
 
+    // Score (right-aligned in header)
     if (result.score) {
       ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
-      ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+      ctx.font = `bold 16px system-ui, -apple-system, sans-serif`;
       ctx.textAlign = 'right';
-      ctx.fillText(result.score, x + cardWidth - 16, iconY + 22);
+      ctx.fillText(result.score, x + cardWidth - hPad, y + 31);
     }
 
-    let statusText = result.won ? 'Solved' : finiteTriesGames.includes(result.gameId) ? 'Failed' : '';
-    if (statusText) {
-      ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
-      ctx.font = '11px system-ui, -apple-system, sans-serif';
-      ctx.fillText(statusText, x + cardWidth - 16, y + cardHeight - 16);
+    // ── Divider ─────────────────────────────────────────────
+    const divY = y + headerH;
+    ctx.fillStyle = 'rgba(255,255,255,0.07)';
+    ctx.fillRect(x + hPad, divY, cardWidth - hPad * 2, divH);
+
+    // ── Raw text lines ───────────────────────────────────────
+    // Clip to text area so long lines don't overflow card
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x + hPad, divY + divH, cardWidth - hPad * 2, cardH - headerH - divH);
+    ctx.clip();
+
+    ctx.font = emojiFont;
+    ctx.fillStyle = '#d1d5db';
+    ctx.textAlign = 'left';
+
+    let lineY = divY + divH + textPadT + textSize;
+    displayLines.forEach(line => {
+      ctx.fillText(line, x + hPad, lineY);
+      lineY += lineH;
+    });
+
+    if (overflow > 0) {
+      ctx.fillStyle = '#6b7280';
+      ctx.font = `italic 11px system-ui, sans-serif`;
+      ctx.fillText(`… ${overflow} more line${overflow === 1 ? '' : 's'}`, x + hPad, lineY);
     }
+
+    ctx.restore();
+
+    cardY += cardH + cardGap;
   });
 
   // Watermark
-  ctx.fillStyle = 'rgba(156, 163, 175, 0.5)';
-  ctx.font = '10px system-ui, -apple-system, sans-serif';
+  ctx.fillStyle = 'rgba(156, 163, 175, 0.4)';
+  ctx.font = '9px system-ui, -apple-system, sans-serif';
   ctx.textAlign = 'center';
-  ctx.fillText('dailygamer.app', width / 2, height - 10);
+  ctx.fillText('dailygamer.app', canvasW / 2, canvasH - 6);
 }

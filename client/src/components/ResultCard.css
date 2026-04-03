@@ -168,22 +168,34 @@
   50% { transform: translateY(-4px); }
 }
 
-/* Emoji Grid */
-.result-card__grid-container {
+/* Full raw text */
+.result-card__rawtext-container {
   background: rgba(0, 0, 0, 0.2);
   border-radius: 8px;
-  padding: 0.625rem;
+  padding: 0.625rem 0.75rem;
   margin-bottom: 0.625rem;
+  max-height: 380px;
+  overflow-y: auto;
 }
 
-.result-card__grid {
-  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif;
-  font-size: 1.125rem;
-  line-height: 1.2;
-  letter-spacing: 2px;
-  text-align: center;
+.result-card__rawtext-container::-webkit-scrollbar {
+  width: 4px;
+}
+.result-card__rawtext-container::-webkit-scrollbar-track { background: transparent; }
+.result-card__rawtext-container::-webkit-scrollbar-thumb {
+  background: var(--input-border);
+  border-radius: 2px;
+}
+
+.result-card__rawtext {
+  font-family: 'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji',
+    ui-monospace, 'Cascadia Code', 'Source Code Pro', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--text-primary);
   white-space: pre-wrap;
   word-break: break-word;
+  margin: 0;
 }
 
 /* Footer */
