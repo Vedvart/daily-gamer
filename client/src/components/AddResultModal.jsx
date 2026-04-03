@@ -1,64 +1,88 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { parseResult } from '../parsers';
+import { guessGameName } from '../parsers';
 import './AddResultModal.css';
 
 function AddResultModal({ isOpen, onClose, onResultParsed }) {
   const [text, setText] = useState('');
-  const [feedback, setFeedback] = useState(null);
+  const [feedback, setFeedback] = useState(null); // null | { type: 'success'|'unknown', result? }
+  const [gameName, setGameName] = useState('');
+  const isAutoName = useRef(true); // true = game name was set automatically; false = user edited it
 
-  // Reset state when modal opens
+  // Reset when modal opens
   useEffect(() => {
     if (isOpen) {
       setText('');
       setFeedback(null);
+      setGameName('');
+      isAutoName.current = true;
     }
   }, [isOpen]);
 
-  // Handle escape key
+  // Escape key closes modal
   useEffect(() => {
-    const handleEscape = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
+    const handleEscape = (e) => { if (e.key === 'Escape' && isOpen) onClose(); };
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
   }, [isOpen, onClose]);
 
-  const handleParse = useCallback((inputText) => {
-    if (!inputText.trim()) {
+  const handleChange = useCallback((e) => {
+    const newText = e.target.value;
+    setText(newText);
+
+    if (!newText.trim()) {
       setFeedback(null);
+      setGameName('');
+      isAutoName.current = true;
       return;
     }
 
-    const result = parseResult(inputText);
-
+    const result = parseResult(newText);
     if (result) {
-      setFeedback({
-        type: 'success',
-        message: `Detected: ${result.gameName} #${result.puzzleNumber}`,
-        result,
-      });
+      setFeedback({ type: 'success', result });
     } else {
-      setFeedback({
-        type: 'error',
-        message: 'Could not recognize game format.',
-      });
+      if (isAutoName.current) {
+        setGameName(guessGameName(newText));
+      }
+      setFeedback({ type: 'unknown' });
     }
   }, []);
 
-  const handleChange = (e) => {
-    const newText = e.target.value;
-    setText(newText);
-    handleParse(newText);
+  const handleGameNameChange = (e) => {
+    isAutoName.current = false;
+    setGameName(e.target.value);
   };
 
   const handleSubmit = () => {
     if (feedback?.type === 'success' && feedback.result) {
       onResultParsed(feedback.result);
-      onClose();
+    } else if (feedback?.type === 'unknown' && gameName.trim()) {
+      const slug = gameName.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      const today = new Date().toISOString().split('T')[0];
+      onResultParsed({
+        id: `unknown-${slug}-${Date.now()}`,
+        gameId: `unknown-${slug}`,
+        gameName: gameName.trim(),
+        puzzleNumber: null,
+        date: today,
+        score: '',
+        scoreValue: null,
+        won: true,
+        grid: null,
+        rawText: text.trim(),
+        isUnknown: true,
+        timestamp: Date.now(),
+      });
     }
+    onClose();
   };
+
+  const canSubmit =
+    feedback?.type === 'success'
+      ? !!feedback.result
+      : feedback?.type === 'unknown'
+      ? gameName.trim().length > 0
+      : false;
 
   if (!isOpen) return null;
 
@@ -75,9 +99,7 @@ function AddResultModal({ isOpen, onClose, onResultParsed }) {
         </div>
 
         <div className="modal__body">
-          <p className="modal__subtitle">
-            Paste your game result below
-          </p>
+          <p className="modal__subtitle">Paste your game result below</p>
 
           <textarea
             className="modal__textarea"
@@ -88,24 +110,46 @@ function AddResultModal({ isOpen, onClose, onResultParsed }) {
             autoFocus
           />
 
-          {feedback && (
-            <div className={`modal__feedback modal__feedback--${feedback.type}`}>
-              {feedback.message}
+          {feedback?.type === 'success' && (
+            <div className="modal__feedback modal__feedback--success">
+              Detected: {feedback.result.gameName}
+              {feedback.result.puzzleNumber ? ` #${feedback.result.puzzleNumber}` : ''}
             </div>
+          )}
+
+          {feedback?.type === 'unknown' && (
+            <>
+              <div className="modal__feedback modal__feedback--unknown">
+                <span className="modal__feedback-icon">⚠</span>
+                This game is not recognized. You can still add it, but performance stats
+                won't be tracked for it.
+              </div>
+
+              <div className="modal__game-name-group">
+                <label className="modal__game-name-label" htmlFor="modal-game-name">
+                  Game Name
+                </label>
+                <input
+                  id="modal-game-name"
+                  type="text"
+                  className="modal__game-name-input"
+                  value={gameName}
+                  onChange={handleGameNameChange}
+                  placeholder="Enter game name…"
+                />
+              </div>
+            </>
           )}
         </div>
 
         <div className="modal__footer">
-          <button
-            className="modal__button modal__button--secondary"
-            onClick={onClose}
-          >
+          <button className="modal__button modal__button--secondary" onClick={onClose}>
             Cancel
           </button>
           <button
             className="modal__button modal__button--primary"
             onClick={handleSubmit}
-            disabled={feedback?.type !== 'success' || !feedback.result}
+            disabled={!canSubmit}
           >
             Save Result
           </button>

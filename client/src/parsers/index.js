@@ -96,4 +96,59 @@ export function getSupportedGames() {
   }));
 }
 
+function toTitleCase(str) {
+  return str
+    .split(/[\s-]+/)
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ');
+}
+
+/**
+ * Attempt to guess the game name from unrecognized paste text.
+ * Heuristics (in order):
+ *   1. If a URL is present, use the most descriptive hostname segment.
+ *   2. Parse the first non-empty line: take leading words up to the first
+ *      purely-numeric token, X/N score, or +N pattern.
+ *   3. Fallback: first 30 characters of the first line.
+ * @param {string} text
+ * @returns {string}
+ */
+export function guessGameName(text) {
+  if (!text || !text.trim()) return '';
+  const trimmed = text.trim();
+
+  // 1. URL → extract hostname
+  const urlMatch = trimmed.match(/https?:\/\/(?:www\.)?([a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*)/);
+  if (urlMatch) {
+    const host = urlMatch[1]; // e.g. "catfishing.net"
+    const parts = host.split('.');
+    const candidate = parts[0].length > 2 ? parts[0] : parts.slice(0, -1).join('.');
+    return toTitleCase(candidate.replace(/-/g, ' '));
+  }
+
+  // 2. First non-empty line
+  const firstLine = trimmed.split('\n').map(l => l.trim()).find(l => l.length > 0) || '';
+  // Strip leading # from the whole line (e.g. "#travle #445 +1")
+  const cleaned = firstLine.replace(/^#+\s*/, '');
+  const words = cleaned.split(/\s+/);
+  const nameTokens = [];
+
+  for (const word of words) {
+    const w = word.replace(/^#/, ''); // strip leading # from individual tokens
+    if (!w.length) continue;
+    // Stop at: pure number, X/N score, +N, slash pattern
+    if (/^\d+$/.test(w)) break;
+    if (/^[X\d]+\/\d+/.test(w)) break;
+    if (/^\+\d+$/.test(w)) break;
+    nameTokens.push(w);
+    if (nameTokens.length >= 3) break;
+  }
+
+  if (nameTokens.length > 0) return toTitleCase(nameTokens.join(' '));
+
+  // 3. Fallback
+  return firstLine.slice(0, 30).trim();
+}
+
 export default parsers;

@@ -109,7 +109,7 @@ function ScorecardPanel({ results }) {
                   onChange={() => toggleResult(r.id)}
                 />
                 <span className="scorecard-panel__check-name">
-                  {gameNames[r.gameId] || r.gameId}
+                  {gameNames[r.gameId] || r.gameName || r.gameId}
                 </span>
               </label>
             ))}

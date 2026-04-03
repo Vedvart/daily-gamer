@@ -93,7 +93,10 @@ export function generateCompactText(results) {
       case 'moreorless':     return `More Or Less: ${r.score}`;
       case 'eruptle':        return `Eruptle #${r.puzzleNumber}: ${r.score}`;
       case 'thrice':         return `Thrice #${r.puzzleNumber}: ${r.score}`;
-      default:               return `${gameNames[r.gameId] || r.gameId} #${r.puzzleNumber}: ${r.score}`;
+      default:
+        // Unknown / unrecognized game — include the full paste text
+        if (r.isUnknown) return r.rawText;
+        return `${gameNames[r.gameId] || r.gameName || r.gameId}${r.puzzleNumber ? ` #${r.puzzleNumber}` : ''}: ${r.score}`;
     }
   });
 
@@ -175,16 +178,20 @@ export function renderImageToCanvas(results, canvas) {
     ctx.fillStyle = '#ffffff';
     ctx.font = 'bold 14px system-ui, -apple-system, sans-serif';
     ctx.textAlign = 'left';
-    ctx.fillText(gameNames[result.gameId] || result.gameName, iconX + iconSize + 12, iconY + 14);
+    ctx.fillText(gameNames[result.gameId] || result.gameName || result.gameId, iconX + iconSize + 12, iconY + 14);
 
-    ctx.fillStyle = '#9ca3af';
-    ctx.font = '11px system-ui, -apple-system, sans-serif';
-    ctx.fillText(`#${result.puzzleNumber}`, iconX + iconSize + 12, iconY + 28);
+    if (result.puzzleNumber) {
+      ctx.fillStyle = '#9ca3af';
+      ctx.font = '11px system-ui, -apple-system, sans-serif';
+      ctx.fillText(`#${result.puzzleNumber}`, iconX + iconSize + 12, iconY + 28);
+    }
 
-    ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
-    ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'right';
-    ctx.fillText(result.score, x + cardWidth - 16, iconY + 22);
+    if (result.score) {
+      ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
+      ctx.font = 'bold 18px system-ui, -apple-system, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText(result.score, x + cardWidth - 16, iconY + 22);
+    }
 
     let statusText = result.won ? 'Solved' : finiteTriesGames.includes(result.gameId) ? 'Failed' : '';
     if (statusText) {
