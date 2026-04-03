@@ -34,7 +34,7 @@ function TodayResults({ results, onRemoveResult }) {
         <h2 className="today-results__title">Today's Results</h2>
         <span className="today-results__date">{today}</span>
       </div>
-      <div className="today-results__grid">
+      <div className="today-results__list">
         {results.map(result => (
           <ResultCard
             key={result.id}
