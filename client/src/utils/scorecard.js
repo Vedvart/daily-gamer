@@ -107,25 +107,28 @@ export function generateCompactText(results) {
 }
 
 // Draws results onto a canvas element. Synchronous.
-// Single-column layout; each card shows the full rawText content.
+// 3-column grid layout; each card shows the full rawText content.
 export function renderImageToCanvas(results, canvas) {
   const ctx = canvas.getContext('2d');
   const s = sorted(results);
 
   // Layout constants
-  const outerPad  = 28;
-  const cardWidth = 500;
-  const cardGap   = 10;
-  const hPad      = 14; // horizontal padding inside card
-  const headerH   = 50; // height of the icon/name/score row
-  const divH      = 1;
-  const textSize  = 12;
-  const lineH     = 18; // px per rawText line
-  const textPadT  = 10; // padding above text block
-  const textPadB  = 10; // padding below text block
-  const maxLines  = 20; // cap to avoid absurdly tall cards
+  const cols     = 3;
+  const outerPad = 20;
+  const colGap   = 10;
+  const rowGap   = 10;
+  const canvasW  = 1050;
+  const cardWidth = (canvasW - outerPad * 2 - colGap * (cols - 1)) / cols;
+  const hPad     = 12;
+  const headerH  = 46;
+  const divH     = 1;
+  const textSize = 11;
+  const lineH    = 16;
+  const textPadT = 8;
+  const textPadB = 8;
+  const maxLines = 15;
 
-  // Pre-compute each card's rawText lines and resulting height
+  // Pre-compute each card's rawText lines and height
   const cards = s.map(result => {
     const allLines = (result.rawText || '').split('\n');
     const displayLines = allLines.slice(0, maxLines);
@@ -135,12 +138,19 @@ export function renderImageToCanvas(results, canvas) {
     return { result, displayLines, overflow, cardH };
   });
 
-  const titleH   = 56;
-  const totalCardH = cards.reduce((sum, c, i) =>
-    sum + c.cardH + (i < cards.length - 1 ? cardGap : 0), 0);
-  const wmH      = 20; // watermark area
-  const canvasW  = outerPad * 2 + cardWidth;
-  const canvasH  = outerPad * 2 + titleH + totalCardH + wmH;
+  // Group into rows; each row height = tallest card in that row
+  const rows = [];
+  for (let i = 0; i < cards.length; i += cols) {
+    const rowCards = cards.slice(i, i + cols);
+    const rowH = Math.max(...rowCards.map(c => c.cardH));
+    rows.push({ rowCards, rowH });
+  }
+
+  const titleH = 56;
+  const wmH    = 20;
+  const totalRowH = rows.reduce((sum, r, i) =>
+    sum + r.rowH + (i < rows.length - 1 ? rowGap : 0), 0);
+  const canvasH = outerPad * 2 + titleH + totalRowH + wmH;
 
   canvas.width  = canvasW;
   canvas.height = canvasH;
@@ -165,95 +175,90 @@ export function renderImageToCanvas(results, canvas) {
   ctx.fillText(today, canvasW / 2, outerPad + 42);
 
   // Cards
-  let cardY = outerPad + titleH;
   const emojiFont = `${textSize}px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", system-ui, sans-serif`;
+  let rowY = outerPad + titleH;
 
-  cards.forEach(({ result, displayLines, overflow, cardH }) => {
-    const x = outerPad;
-    const y = cardY;
-    const color = gameColors[result.gameId] || '#6b7280';
+  rows.forEach(({ rowCards, rowH }) => {
+    rowCards.forEach(({ result, displayLines, overflow }, colIdx) => {
+      const x = outerPad + colIdx * (cardWidth + colGap);
+      const y = rowY;
+      const color = gameColors[result.gameId] || '#6b7280';
 
-    // Card background
-    ctx.fillStyle = 'rgba(37, 37, 64, 0.92)';
-    ctx.beginPath();
-    ctx.roundRect(x, y, cardWidth, cardH, 10);
-    ctx.fill();
+      // Card background (all cards in a row share the same height)
+      ctx.fillStyle = 'rgba(37, 37, 64, 0.92)';
+      ctx.beginPath();
+      ctx.roundRect(x, y, cardWidth, rowH, 10);
+      ctx.fill();
 
-    // Top accent bar
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, cardWidth, 3);
+      // Top accent bar
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, cardWidth, 3);
 
-    // ── Header ──────────────────────────────────────────────
-    const iconSize = 28;
-    const iconX = x + hPad;
-    const iconY = y + (headerH - iconSize) / 2;
+      // ── Header ──────────────────────────────────────────────
+      const iconSize = 26;
+      const iconX = x + hPad;
+      const iconY = y + (headerH - iconSize) / 2;
 
-    // Icon background
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.roundRect(iconX, iconY, iconSize, iconSize, 5);
-    ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.roundRect(iconX, iconY, iconSize, iconSize, 5);
+      ctx.fill();
 
-    // Icon letter
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold 13px system-ui, -apple-system, sans-serif`;
-    ctx.textAlign = 'center';
-    const iconLetter = (result.gameId[0] || '?').toUpperCase();
-    ctx.fillText(iconLetter, iconX + iconSize / 2, iconY + 19);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold 12px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText((result.gameId[0] || '?').toUpperCase(), iconX + iconSize / 2, iconY + 17);
 
-    // Game name
-    const gameLabel = gameNames[result.gameId] || result.gameName || result.gameId;
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `bold 13px system-ui, -apple-system, sans-serif`;
-    ctx.textAlign = 'left';
-    ctx.fillText(gameLabel, iconX + iconSize + 10, y + 22);
+      const gameLabel = gameNames[result.gameId] || result.gameName || result.gameId;
+      ctx.fillStyle = '#ffffff';
+      ctx.font = `bold 12px system-ui, -apple-system, sans-serif`;
+      ctx.textAlign = 'left';
+      ctx.fillText(gameLabel, iconX + iconSize + 8, y + 20);
 
-    // Puzzle number
-    if (result.puzzleNumber) {
-      ctx.fillStyle = '#9ca3af';
-      ctx.font = `11px system-ui, -apple-system, sans-serif`;
-      ctx.fillText(`#${result.puzzleNumber}`, iconX + iconSize + 10, y + 37);
-    }
+      if (result.puzzleNumber) {
+        ctx.fillStyle = '#9ca3af';
+        ctx.font = `10px system-ui, -apple-system, sans-serif`;
+        ctx.fillText(`#${result.puzzleNumber}`, iconX + iconSize + 8, y + 33);
+      }
 
-    // Score (right-aligned in header)
-    if (result.score) {
-      ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
-      ctx.font = `bold 16px system-ui, -apple-system, sans-serif`;
-      ctx.textAlign = 'right';
-      ctx.fillText(result.score, x + cardWidth - hPad, y + 31);
-    }
+      if (result.score) {
+        ctx.fillStyle = result.won ? '#22c55e' : '#ef4444';
+        ctx.font = `bold 13px system-ui, -apple-system, sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.fillText(result.score, x + cardWidth - hPad, y + 27);
+      }
 
-    // ── Divider ─────────────────────────────────────────────
-    const divY = y + headerH;
-    ctx.fillStyle = 'rgba(255,255,255,0.07)';
-    ctx.fillRect(x + hPad, divY, cardWidth - hPad * 2, divH);
+      // ── Divider ─────────────────────────────────────────────
+      const divY = y + headerH;
+      ctx.fillStyle = 'rgba(255,255,255,0.07)';
+      ctx.fillRect(x + hPad, divY, cardWidth - hPad * 2, divH);
 
-    // ── Raw text lines ───────────────────────────────────────
-    // Clip to text area so long lines don't overflow card
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x + hPad, divY + divH, cardWidth - hPad * 2, cardH - headerH - divH);
-    ctx.clip();
+      // ── Raw text lines ───────────────────────────────────────
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(x + hPad, divY + divH, cardWidth - hPad * 2, rowH - headerH - divH);
+      ctx.clip();
 
-    ctx.font = emojiFont;
-    ctx.fillStyle = '#d1d5db';
-    ctx.textAlign = 'left';
+      ctx.font = emojiFont;
+      ctx.fillStyle = '#d1d5db';
+      ctx.textAlign = 'left';
 
-    let lineY = divY + divH + textPadT + textSize;
-    displayLines.forEach(line => {
-      ctx.fillText(line, x + hPad, lineY);
-      lineY += lineH;
+      let lineY = divY + divH + textPadT + textSize;
+      displayLines.forEach(line => {
+        ctx.fillText(line, x + hPad, lineY);
+        lineY += lineH;
+      });
+
+      if (overflow > 0) {
+        ctx.fillStyle = '#6b7280';
+        ctx.font = `italic 10px system-ui, sans-serif`;
+        ctx.fillText(`… ${overflow} more line${overflow === 1 ? '' : 's'}`, x + hPad, lineY);
+      }
+
+      ctx.restore();
     });
 
-    if (overflow > 0) {
-      ctx.fillStyle = '#6b7280';
-      ctx.font = `italic 11px system-ui, sans-serif`;
-      ctx.fillText(`… ${overflow} more line${overflow === 1 ? '' : 's'}`, x + hPad, lineY);
-    }
-
-    ctx.restore();
-
-    cardY += cardH + cardGap;
+    rowY += rowH + rowGap;
   });
 
   // Watermark
